@@ -28,6 +28,10 @@ const defaultCats=[
 let categories=[];
 try{categories=JSON.parse(await fs.readFile(catDb,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;categories=[...defaultCats];await fs.writeFile(catDb,JSON.stringify(categories,null,2)).catch(()=>{});}
 function mutateCategories(fn){const job=queue.then(async()=>{const next=fn(categories);await fs.writeFile(catDb+'.tmp',JSON.stringify(next,null,2));await fs.rename(catDb+'.tmp',catDb);categories=next;});queue=job.catch(()=>{});return job;}
+const settingsDb=path.join(root,'data/settings.json');
+let settings={previewMode:'new_tab'};
+try{settings={...settings,...JSON.parse(await fs.readFile(settingsDb,'utf8'))};}catch(e){if(e.code!=='ENOENT')throw e;await fs.writeFile(settingsDb,JSON.stringify(settings,null,2)).catch(()=>{});}
+function mutateSettings(fn){const job=queue.then(async()=>{const next=fn(settings);await fs.writeFile(settingsDb+'.tmp',JSON.stringify(next,null,2));await fs.rename(settingsDb+'.tmp',settingsDb);settings=next;});queue=job.catch(()=>{});return job;}
 const sessions=new Map(), attempts=new Map();
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css','.js':'text/javascript','.json':'application/json','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.svg':'image/svg+xml','.ico':'image/x-icon','.woff2':'font/woff2'};
 function send(res,status,data){res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));}
@@ -48,9 +52,12 @@ try{const html=await renderPreview(theme,photo);res.removeHeader('X-Frame-Option
 if(p.startsWith('/api/')){
 if(!['GET','HEAD'].includes(req.method)&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return send(res,403,{error:'Asal permintaan tidak diizinkan.'});
 if(p==='/api/themes'&&req.method==='GET')return send(res,200,themes.filter(t=>t.active));
+if(p==='/api/settings'&&req.method==='GET')return send(res,200,settings);
 if(p==='/api/categories'&&req.method==='GET'){const list=[...categories];const seen=new Set(list.map(c=>c.name));for(const t of themes.filter(x=>x.active)){if(!seen.has(t.category)){seen.add(t.category);list.push({id:t.category.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name:t.category,note:''});}}return send(res,200,list);}
 if(p==='/api/login'&&req.method==='POST'){const ip=req.socket.remoteAddress;const a=attempts.get(ip)||{n:0,until:0};if(a.until>Date.now()&&a.n>=8)return send(res,429,{error:'Terlalu banyak percobaan. Coba lagi 15 menit.'});const b=await body(req);const check=scryptSync(String(b.password||''),auth.salt,64);if(b.username!=='admin'||!timingSafeEqual(check,Buffer.from(auth.hash,'hex'))){attempts.set(ip,{n:a.until>Date.now()?a.n+1:1,until:Date.now()+900000});return send(res,401,{error:'Nama pengguna atau kata sandi salah.'});}attempts.delete(ip);const id=randomBytes(32).toString('hex');sessions.set(id,Date.now()+8*3600000);res.setHeader('Set-Cookie',`gs_session=${id}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${process.env.COOKIE_SECURE==='true'?'; Secure':''}`);return send(res,200,{ok:true});}
 if(!logged)return send(res,401,{error:'Silakan masuk kembali.'});
+if(p==='/api/admin/settings'&&req.method==='GET')return send(res,200,settings);
+if(p==='/api/admin/settings'&&['POST','PUT'].includes(req.method)){const b=await body(req);const mode=b.previewMode==='modal'?'modal':'new_tab';await mutateSettings(all=>({...all,previewMode:mode}));return send(res,200,settings);}
 if(p==='/api/admin/categories'&&req.method==='GET'){const list=[...categories];const seen=new Set(list.map(c=>c.name));for(const t of themes){if(!seen.has(t.category)){seen.add(t.category);list.push({id:t.category.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name:t.category,note:''});}}return send(res,200,list);}
 if(p==='/api/admin/categories'&&req.method==='POST'){const b=await body(req);const name=String(b.name||'').trim().slice(0,60);const note=String(b.note||'').trim().slice(0,300);if(!name)throw Error('Nama kategori wajib diisi.');if(categories.some(c=>c.name.toLowerCase()===name.toLowerCase()))throw Error('Kategori sudah ada.');const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||randomBytes(4).toString('hex');const item={id,name,note};await mutateCategories(all=>[...all,item]);return send(res,200,item);}
 if(p.startsWith('/api/admin/categories/')&&req.method==='DELETE'){const target=decodeURIComponent(p.slice(23));await mutateCategories(all=>all.filter(c=>c.id!==target&&c.name!==target));return send(res,200,{ok:true});}

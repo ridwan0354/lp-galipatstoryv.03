@@ -189,11 +189,15 @@ function render(){
   });
 }
 
+let siteSettings={previewMode:'new_tab'};
+if(typeof window!=='undefined')window.siteSettings=siteSettings;
 Promise.all([
   fetch('/api/themes').then(r=>{if(!r.ok)throw Error();return r.json()}),
-  fetch('/api/categories').then(r=>r.ok?r.json():[]).catch(()=>[])
-]).then(([data,serverCategories])=>{
+  fetch('/api/categories').then(r=>r.ok?r.json():[]).catch(()=>[]),
+  fetch('/api/settings').then(r=>r.ok?r.json():null).catch(()=>null)
+]).then(([data,serverCategories,serverSettings])=>{
   themes=data;
+  if(serverSettings?.previewMode)siteSettings.previewMode=serverSettings.previewMode;
   const catNamesSet=new Set();
   serverCategories.forEach(c=>{
     if(c.name){
@@ -302,8 +306,25 @@ function showChoices(){
   document.getElementById('preview-choice').hidden=false;
   document.getElementById('preview-viewer').hidden=true;
 }
+function openDemoUrl(url){
+  if(!url)return;
+  try{
+    const win=window.open(url,'_blank','noopener,noreferrer');
+    if(!win||win.closed||typeof win.closed==='undefined'){
+      window.location.assign(url);
+    }
+  }catch(_){
+    window.location.assign(url);
+  }
+}
 function openPreview(theme){
   previewTheme=theme;
+  if(siteSettings.previewMode==='new_tab'&&!theme.demoPhoto){
+    if(theme.demo){
+      openDemoUrl(theme.demo);
+      return;
+    }
+  }
   document.getElementById('preview-title').textContent=theme.name;
   updateFavoriteUI();
   const noPhotoEl=document.getElementById('no-photo-price');
@@ -329,8 +350,13 @@ function openPreview(theme){
 }
 function loadPreview(photo){
   clearTimeout(previewTimer);
-  const url=photo?previewTheme.demoPhoto:previewTheme.demo;
+  const url=photo?previewTheme?.demoPhoto:previewTheme?.demo;
   if(!url)return;
+  if(siteSettings.previewMode==='new_tab'){
+    closePreviewModal();
+    openDemoUrl(url);
+    return;
+  }
   previewVersion=photo?'Dengan Foto':previewTheme.demoPhoto?'Tanpa Foto':'Contoh Tema';
   document.getElementById('preview-choice').hidden=true;
   document.getElementById('preview-viewer').hidden=false;
@@ -353,6 +379,8 @@ function loadPreview(photo){
   const buy=document.getElementById('preview-buy');
   buy.href=wa(`${previewTheme.name} (${previewTheme.category}) — ${previewVersion}`);
   buy.dataset.theme=previewTheme.name;
+  const openTab=document.getElementById('preview-open-tab');
+  if(openTab)openTab.href=url;
   previewTimer=setTimeout(()=>{document.getElementById('preview-status').textContent='Contoh disediakan oleh server undangan. Jika belum tampil, coba muat ulang.';},15000);
 }
 frame.addEventListener('load',()=>{
