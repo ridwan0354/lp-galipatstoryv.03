@@ -1,9 +1,22 @@
 // Repair the existing invitation's opener; do not create another button.
 (() => {
-  const openerSelector = '#btnOpens, #tombolbuka, #tombol-buka, [id*="tombol-buka"], [id*="tombolbuka"], [id*="btnOpen"], a[href="#open"], a[href$="#open"]';
+  const openerSelector = '#btnOpens, #tombolbuka, #tombol-buka, [id*="tombol-buka"], [id*="tombolbuka"], [id*="btnOpen"], a[href="#open"], a[href$="#open"], .btn-open-invitation, [class*="btn-open"]';
   let opened = false;
   let content;
   const covers = new Set();
+
+  // Safe mock for requestFullscreen so permission policy or sandboxing never throws an unhandled error
+  try {
+    const noop = () => Promise.resolve();
+    if (typeof Element !== 'undefined') {
+      Element.prototype.requestFullscreen = noop;
+      Element.prototype.webkitRequestFullscreen = noop;
+    }
+    if (typeof Document !== 'undefined') {
+      Document.prototype.requestFullscreen = noop;
+      Document.prototype.webkitRequestFullscreen = noop;
+    }
+  } catch (_) {}
 
   function isOpenLink(node) {
     if (!node) return false;
@@ -30,6 +43,7 @@
       }
     }
     document.querySelectorAll('.kolomPertama').forEach(node => forceStyle(node, 'display', 'block'));
+    document.querySelectorAll('.not-open').forEach(node => node.classList.remove('not-open'));
     for (const cover of covers) {
       forceStyle(cover, 'display', 'none');
       forceStyle(cover, 'visibility', 'hidden');
@@ -38,10 +52,22 @@
 
   function openInvitation(event) {
     const target = event.target?.nodeType === 3 ? event.target.parentElement : event.target;
-    const link = target?.closest?.('a, button, [role="button"], #tombol-buka, #tombolbuka, #btnOpens');
+    const link = target?.closest?.('a, button, [role="button"], #tombol-buka, #tombolbuka, #btnOpens, .btn-open-invitation');
     if (!link || !isOpenLink(link)) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
+    if (typeof event.preventDefault === 'function') event.preventDefault();
+    if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+
+    // Remove .not-open and hide button immediately (for SatuMomen themes)
+    document.querySelectorAll('.not-open').forEach(node => node.classList.remove('not-open'));
+    document.querySelectorAll('.btn-open-invitation').forEach(b => b.classList.add('d-none'));
+
+    // Trigger theme-native opener methods if present
+    try {
+      if (typeof window.swipeUp === 'function') window.swipeUp();
+      if (typeof window.playMusic === 'function') window.playMusic(true);
+      if (typeof window.playInvitation === 'function') window.playInvitation();
+    } catch (_) {}
+
     if (opened) return;
 
     for (const sel of ['#sec-cover', '#isi-cover', '#cover', '#_foto_galeri_bg', '.cover']) {

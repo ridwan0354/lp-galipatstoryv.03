@@ -43,7 +43,7 @@ if(p==='/go/instagram'||p==='/go/instagram/'){res.writeHead(302,{'Location':'htt
 if(p==='/invitation-preview'&&req.method==='GET'){
 const theme=themes.find(t=>t.active&&t.id===u.searchParams.get('theme'));const photo=u.searchParams.get('version')==='photo';
 if(!theme||!supportsPreview(photo?theme.demoPhoto:theme.demo))return send(res,404,{error:'Contoh tidak tersedia.'});
-try{const html=await renderPreview(theme,photo);res.removeHeader('X-Frame-Options');res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"sandbox allow-scripts allow-popups"});return res.end(html);}catch{return send(res,502,{error:'Contoh sedang tidak dapat dimuat. Silakan coba lagi.'});}
+try{const html=await renderPreview(theme,photo);res.removeHeader('X-Frame-Options');res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"sandbox allow-scripts allow-popups allow-same-origin allow-forms"});return res.end(html);}catch{return send(res,502,{error:'Contoh sedang tidak dapat dimuat. Silakan coba lagi.'});}
 }
 if(p.startsWith('/api/')){
 if(!['GET','HEAD'].includes(req.method)&&req.headers.origin!==`http://${req.headers.host}`&&req.headers.origin!==`https://${req.headers.host}`)return send(res,403,{error:'Asal permintaan tidak diizinkan.'});

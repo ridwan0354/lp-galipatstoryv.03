@@ -82,10 +82,7 @@ export async function renderPreview(theme,photo){
    return tag;
  });
  html=html.replace(/<a\b([^>]*\bhref=["']#open["'][^>]*)>/gi,(tag,attributes)=>'<a'+attributes.replace(/\s+on(?:click|touchend)=["'][\s\S]*?["']/gi,'')+' onclick="window.gsOpenInvitation(event);return false" ontouchend="window.gsOpenInvitation(event);return false">');
- const isSatuMomen = source.hostname === 'inv.galipat-story.com';
- const adapter = isSatuMomen
-   ? '<script>try{document.documentElement.requestFullscreen=()=>Promise.resolve();document.documentElement.webkitRequestFullscreen=()=>Promise.resolve();}catch(e){}document.addEventListener("keydown",e=>{if(e.key==="Escape")window.parent.postMessage({type:"gs-preview-close"},"*");});</script>'
-   : '<script>'+await readFile(new URL('./public/preview-opener.js',import.meta.url),'utf8')+'</script>';
+ const adapter = '<script>'+await readFile(new URL('./public/preview-opener.js',import.meta.url),'utf8')+'</script>';
  const fontFiles=['fa-solid-900.woff2','fa-regular-400.woff2','fa-brands-400.woff2','eicons.woff2'];
  const fontData=await Promise.all(fontFiles.map(async name=>'data:font/woff2;base64,'+(await readFile(new URL('./public/vendor/fonts/'+name,import.meta.url))).toString('base64')));
  const fonts=`<style>
