@@ -60,3 +60,81 @@ test('premium theme with tombol-buka and sec-cover opens and unlocks smoothly',(
  assert.equal(body.style.getPropertyValue('overflow-y'),'auto');
  assert.equal(mainContent.scrolled,true);
 });
+
+test('floral theme with href="#cover" does not hide the content section #cover', () => {
+  const handlers = { document: {}, window: {} };
+  const style = () => {
+    const values = new Map();
+    return {
+      getPropertyValue: k => values.get(k)?.value || '',
+      getPropertyPriority: k => values.get(k)?.priority || '',
+      setProperty: (k, value, priority) => values.set(k, { value, priority })
+    };
+  };
+  const coverSection = { style: style(), contains: () => false };
+  const mainContentCover = { style: style(), id: 'cover', contains: () => false, scrollIntoView() { this.scrolled = true; } };
+  const link = {
+    textContent: 'Buka Undangan',
+    getAttribute: attr => attr === 'href' ? '#cover' : null,
+    matches: () => true,
+    closest: () => coverSection
+  };
+  const span = { nodeType: 1, closest: () => link };
+  const root = { style: style(), dataset: {} };
+  const body = { style: style() };
+  const document = {
+    documentElement: root,
+    body,
+    addEventListener: (k, fn) => handlers.document[k] = fn,
+    getElementById: id => id === 'cover' ? mainContentCover : null,
+    querySelector: () => null,
+    querySelectorAll: () => [link]
+  };
+  const window = { onscroll: () => {}, parent: { postMessage() {} }, addEventListener: (k, fn) => handlers.window[k] = fn };
+  vm.runInNewContext(code, { document, window, MutationObserver: class { observe() {} }, Math, Object });
+  const event = s => ({ target: s, preventDefault() {}, stopImmediatePropagation() {} });
+  handlers.document.click(event(span));
+  assert.equal(root.dataset.gsOpened, 'true');
+  assert.equal(coverSection.style.getPropertyValue('display'), 'none');
+  // Content section #cover must NOT have display: none
+  assert.notEqual(mainContentCover.style.getPropertyValue('display'), 'none');
+  assert.equal(mainContentCover.scrolled, true);
+});
+
+test('animation theme with href="#home" scrolls directly to target #home', () => {
+  const handlers = { document: {}, window: {} };
+  const style = () => {
+    const values = new Map();
+    return {
+      getPropertyValue: k => values.get(k)?.value || '',
+      getPropertyPriority: k => values.get(k)?.priority || '',
+      setProperty: (k, value, priority) => values.set(k, { value, priority })
+    };
+  };
+  const coverSection = { style: style(), contains: () => false };
+  const homeTarget = { style: style(), id: 'home', contains: () => false, scrollIntoView() { this.scrolled = true; } };
+  const link = {
+    textContent: 'Buka Undangan',
+    getAttribute: attr => attr === 'href' ? '#home' : null,
+    matches: () => true,
+    closest: () => coverSection
+  };
+  const span = { nodeType: 1, closest: () => link };
+  const root = { style: style(), dataset: {} };
+  const body = { style: style() };
+  const document = {
+    documentElement: root,
+    body,
+    addEventListener: (k, fn) => handlers.document[k] = fn,
+    getElementById: id => id === 'home' ? homeTarget : null,
+    querySelector: () => null,
+    querySelectorAll: () => [link]
+  };
+  const window = { onscroll: () => {}, parent: { postMessage() {} }, addEventListener: (k, fn) => handlers.window[k] = fn };
+  vm.runInNewContext(code, { document, window, MutationObserver: class { observe() {} }, Math, Object });
+  const event = s => ({ target: s, preventDefault() {}, stopImmediatePropagation() {} });
+  handlers.document.click(event(span));
+  assert.equal(root.dataset.gsOpened, 'true');
+  assert.equal(coverSection.style.getPropertyValue('display'), 'none');
+  assert.equal(homeTarget.scrolled, true);
+});

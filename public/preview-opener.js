@@ -112,8 +112,8 @@
   }
 
   function forceStyle(element, property, value) {
-    if (element && (element.style.getPropertyValue(property) !== value || element.style.getPropertyPriority(property) !== 'important')) {
-      element.style.setProperty(property, value, 'important');
+    if (element && element.style && (element.style.getPropertyValue?.(property) !== value || element.style.getPropertyPriority?.(property) !== 'important')) {
+      element.style.setProperty?.(property, value, 'important');
     }
   }
 
@@ -127,7 +127,7 @@
       }
     }
     document.querySelectorAll('.kolomPertama').forEach(node => forceStyle(node, 'display', 'block'));
-    document.querySelectorAll('.not-open').forEach(node => node.classList.remove('not-open'));
+    document.querySelectorAll('.not-open').forEach(node => node.classList?.remove?.('not-open'));
     for (const cover of covers) {
       forceStyle(cover, 'display', 'none');
       forceStyle(cover, 'visibility', 'hidden');
@@ -142,8 +142,8 @@
     if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
 
     // Remove .not-open and hide button immediately (for SatuMomen themes)
-    document.querySelectorAll('.not-open').forEach(node => node.classList.remove('not-open'));
-    document.querySelectorAll('.btn-open-invitation').forEach(b => b.classList.add('d-none'));
+    document.querySelectorAll('.not-open').forEach(node => node.classList?.remove?.('not-open'));
+    document.querySelectorAll('.btn-open-invitation').forEach(b => b.classList?.add?.('d-none'));
 
     // Trigger theme-native opener methods if present
     try {
@@ -154,28 +154,58 @@
 
     if (opened) return;
 
-    for (const sel of ['#sec-cover', '#isi-cover', '#cover', '#_foto_galeri_bg', '.cover']) {
-      for (const el of document.querySelectorAll(sel)) covers.add(el);
+    let targetEl = null;
+    const href = (link.getAttribute?.('href') || '').trim();
+    if (href.startsWith('#') && href.length > 1) {
+      const targetId = href.slice(1);
+      targetEl = document.getElementById?.(targetId) ||
+                 document.querySelector?.(`[id="${targetId}"]`) ||
+                 document.querySelector?.(`a[name="${targetId}"]`);
     }
 
-    content = document.getElementById('open') || document.querySelector('.kolomPertama');
-    // The source templates keep separate desktop/mobile covers, sometimes with duplicate IDs.
-    for (const node of document.querySelectorAll('a, button, #btnOpens, #tombolbuka, #tombol-buka, [role="button"]')) {
+    content = targetEl ||
+              document.getElementById?.('open') ||
+              document.getElementById?.('home') ||
+              document.getElementById?.('content') ||
+              document.querySelector?.('.kolomPertama');
+
+    const buttonCover = link.closest?.('section, header, .e-con, .e-parent');
+    if (buttonCover && buttonCover !== content && !buttonCover.contains?.(content)) {
+      covers.add(buttonCover);
+    }
+
+    for (const sel of ['#sec-cover', '#isi-cover']) {
+      const els = document.querySelectorAll?.(sel) || [];
+      for (const el of els) {
+        if (el !== content && !el.contains?.(content)) covers.add(el);
+      }
+    }
+
+    // Additional covers for openers that are not inside buttonCover
+    for (const node of (document.querySelectorAll?.('a, button, #btnOpens, #tombolbuka, #tombol-buka, [role="button"]') || [])) {
       if (!isOpenLink(node)) continue;
-      const cover = node.closest('section, header, .e-con, .e-parent, [id*="cover"]');
-      if (cover && (!content || !cover.contains(content))) covers.add(cover);
+      const c = node.closest?.('section, header, .e-con, .e-parent');
+      if (c && c !== content && !c.contains?.(content)) covers.add(c);
     }
 
     if (!content) {
-      for (const el of document.querySelectorAll('main, section, article, .elementor-section, .e-con')) {
+      for (const el of (document.querySelectorAll?.('main, section, article, .elementor-section, .e-con') || [])) {
         let insideCover = false;
         for (const cover of covers) {
-          if (cover === el || cover.contains(el)) { insideCover = true; break; }
+          if (cover === el || cover.contains?.(el)) { insideCover = true; break; }
         }
         if (!insideCover) {
           content = el;
           break;
         }
+      }
+    }
+
+    // Safety: ensure content (and its parents) is never hidden
+    if (content) {
+      covers.delete(content);
+      for (const c of covers) {
+        if (c.contains?.(content)) covers.delete(c);
       }
     }
 
@@ -186,13 +216,13 @@
       Object.defineProperty(window, 'onscroll', { get: () => null, set: () => {}, configurable: true });
     } catch {}
 
-    for (const media of document.querySelectorAll('audio, .motionSection video')) {
-      try { media.play()?.catch(() => {}); } catch {}
+    for (const media of (document.querySelectorAll?.('audio, .motionSection video') || [])) {
+      try { media.play?.()?.catch?.(() => {}); } catch {}
     }
     if (content && typeof content.scrollIntoView === 'function') {
       content.scrollIntoView({ behavior: 'instant', block: 'start' });
     } else {
-      window.scrollTo(0, 0);
+      window.scrollTo?.(0, 0);
     }
     // Late-loading template scripts must not restore the scroll lock or the cover.
     const observer = new MutationObserver(unlock);
