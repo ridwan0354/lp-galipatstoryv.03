@@ -36,8 +36,28 @@ test('routes /tema and /web-invitation serve respective landing pages', async ()
     await fs.copyFile(new URL('../public/tema.html', import.meta.url), path.join(dir, 'public/tema.html'));
     await fs.copyFile(new URL('../public/web-invitation.html', import.meta.url), path.join(dir, 'public/web-invitation.html'));
     await fs.copyFile(new URL('../public/index.html', import.meta.url), path.join(dir, 'public/index.html'));
+    await fs.copyFile(new URL('../public/admin.html', import.meta.url), path.join(dir, 'public/admin.html'));
 
     await start();
+
+    // Check /kamu serves admin panel, /admin returns 404
+    const rKamu = await fetch(`${base}/kamu`);
+    assert.equal(rKamu.status, 200);
+    const htmlKamu = await rKamu.text();
+    assert.ok(htmlKamu.includes('RUANG KELOLA KATALOG'));
+    assert.ok(!htmlKamu.includes('AKSES-ADMIN.txt'));
+
+    const rKamuSlash = await fetch(`${base}/kamu/`);
+    assert.equal(rKamuSlash.status, 200);
+
+    const rAdmin = await fetch(`${base}/admin`);
+    assert.equal(rAdmin.status, 404);
+
+    const rAdminSlash = await fetch(`${base}/admin/`);
+    assert.equal(rAdminSlash.status, 404);
+
+    const rAdminHtml = await fetch(`${base}/admin.html`);
+    assert.equal(rAdminHtml.status, 404);
 
     // Check /tema and /tema/
     const rTema1 = await fetch(`${base}/tema`);

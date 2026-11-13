@@ -116,6 +116,7 @@ systemctl reload nginx
 echo ""
 echo "================================================="
 echo "🎉 DEPLOY SUKSES!"
-echo "🌐 Website sudah aktif di: https://$DOMAIN"
+echo "🌐 Website: https://$DOMAIN"
+echo "🔐 Panel Admin: https://$DOMAIN/kamu"
 echo "📊 Cek log/status PM2: pm2 status $DOMAIN"
 echo "================================================="

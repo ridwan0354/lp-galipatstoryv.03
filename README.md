@@ -7,9 +7,9 @@ Proyek baru yang terpisah dari website lama, dengan tampilan baru dan admin kata
 1. Buka Terminal di folder proyek.
 2. Jalankan `npm start`.
 3. Website: http://127.0.0.1:4303/
-4. Admin: http://127.0.0.1:4303/admin
-5. Login awal: nama pengguna `admin`; password acak ada di file `AKSES-ADMIN.txt` yang dibuat saat server pertama kali dijalankan. File ini tidak dilayani melalui website.
-6. Ganti password melalui menu admin. Setelah diganti, file password awal dihapus.
+4. Admin: http://127.0.0.1:4303/kamu
+5. Login: nama pengguna `admin`, kata sandi `IniBulanAgustus2026`.
+6. Ganti password melalui menu admin atau script `npm run set-pass`.
 
 ## Mengelola tema
 
