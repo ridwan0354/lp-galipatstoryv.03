@@ -40,7 +40,7 @@ test('routes /tema and /web-invitation serve respective landing pages', async ()
 
     await start();
 
-    // Check /kamu serves admin panel, /admin returns 404
+    // Check /kamu serves admin panel, /admin redirects to /
     const rKamu = await fetch(`${base}/kamu`);
     assert.equal(rKamu.status, 200);
     const htmlKamu = await rKamu.text();
@@ -50,14 +50,27 @@ test('routes /tema and /web-invitation serve respective landing pages', async ()
     const rKamuSlash = await fetch(`${base}/kamu/`);
     assert.equal(rKamuSlash.status, 200);
 
-    const rAdmin = await fetch(`${base}/admin`);
-    assert.equal(rAdmin.status, 404);
+    const rAdmin = await fetch(`${base}/admin`, { redirect: 'manual' });
+    assert.equal(rAdmin.status, 302);
+    assert.equal(rAdmin.headers.get('location'), '/');
 
-    const rAdminSlash = await fetch(`${base}/admin/`);
-    assert.equal(rAdminSlash.status, 404);
+    const rAdminSlash = await fetch(`${base}/admin/`, { redirect: 'manual' });
+    assert.equal(rAdminSlash.status, 302);
+    assert.equal(rAdminSlash.headers.get('location'), '/');
 
-    const rAdminHtml = await fetch(`${base}/admin.html`);
-    assert.equal(rAdminHtml.status, 404);
+    const rAdminHtml = await fetch(`${base}/admin.html`, { redirect: 'manual' });
+    assert.equal(rAdminHtml.status, 302);
+    assert.equal(rAdminHtml.headers.get('location'), '/');
+
+    const rRandom = await fetch(`${base}/coba-halaman-acak`, { redirect: 'manual' });
+    assert.equal(rRandom.status, 302);
+    assert.equal(rRandom.headers.get('location'), '/');
+
+    // Follow redirect on /admin brings visitor to homepage
+    const rAdminFollow = await fetch(`${base}/admin`);
+    assert.equal(rAdminFollow.status, 200);
+    const htmlAdminFollow = await rAdminFollow.text();
+    assert.ok(htmlAdminFollow.includes('Galipat Story'));
 
     // Check /tema and /tema/
     const rTema1 = await fetch(`${base}/tema`);
