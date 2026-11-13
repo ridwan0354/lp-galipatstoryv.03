@@ -1,4 +1,10 @@
 const money=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n);
+const ARROW_SVG='<svg class="arrow-icon" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 9.5L9.5 2.5M9.5 2.5H4.5M9.5 2.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
+document.querySelectorAll('a, button, span.social-arrow').forEach(el=>{
+  if(el.childNodes.length===1&&el.childNodes[0].nodeType===3&&el.textContent.includes('↗')){
+    el.innerHTML=el.textContent.replace(/↗/g,ARROW_SVG);
+  }
+});
 const wa=(name='')=>{
   if(!name)return 'https://api.whatsapp.com/send?phone=6281803300354&text='+encodeURIComponent('Halo kak, saya lihat website Galipat Story. Mau tanya paket undangan digital dan minta rekomendasi tema, boleh?');
   const msg=name.startsWith('Add-on')
@@ -153,7 +159,8 @@ function render(){
     const preview=el('button','button outline','Lihat contoh');
     preview.type='button';
     preview.onclick=()=>openPreview(t);
-    const buy=el('a','button wa','Pilih tema ini ↗');
+    const buy=el('a','button wa');
+    buy.innerHTML='Pilih tema ini '+ARROW_SVG;
     Object.assign(buy,{href:wa(`${t.name} (${t.category})`),target:'_blank',rel:'noopener noreferrer'});
     buy.dataset.theme=t.name;
     buy.dataset.location='theme-card';
