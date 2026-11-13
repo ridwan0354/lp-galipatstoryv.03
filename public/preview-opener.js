@@ -119,11 +119,13 @@
 
   function unlock() {
     window.onscroll = null;
+    document.body?.classList?.remove?.('stop-scrolling');
     for (const root of [document.documentElement, document.body]) {
       if (root) {
         forceStyle(root, 'overflow', 'auto');
         forceStyle(root, 'overflow-y', 'auto');
         forceStyle(root, 'height', 'auto');
+        root.classList?.remove?.('stop-scrolling');
       }
     }
     document.querySelectorAll('.kolomPertama').forEach(node => forceStyle(node, 'display', 'block'));
@@ -132,6 +134,13 @@
       forceStyle(cover, 'display', 'none');
       forceStyle(cover, 'visibility', 'hidden');
     }
+    try {
+      if (typeof window.showAllSect === 'function') window.showAllSect();
+      if (typeof window.enableScroll === 'function') window.enableScroll();
+      document.querySelectorAll?.('.elementor-top-section, .elementor-section').forEach?.(el => {
+        if (!covers.has(el) && el.style?.display === 'none') el.style.display = '';
+      });
+    } catch (_) {}
   }
 
   function openInvitation(event) {
@@ -150,6 +159,11 @@
       if (typeof window.swipeUp === 'function') window.swipeUp();
       if (typeof window.playMusic === 'function') window.playMusic(true);
       if (typeof window.playInvitation === 'function') window.playInvitation();
+      if (typeof window._playAudio === 'function') window._playAudio();
+      if (typeof window.showAllSect === 'function') window.showAllSect();
+      if (typeof window.enableScroll === 'function') window.enableScroll();
+      const tb = document.getElementById?.('tombolbuka') || document.getElementById?.('tombol-buka');
+      if (typeof tb?.onclick === 'function') tb.onclick(event);
     } catch (_) {}
 
     if (opened) return;
@@ -169,7 +183,11 @@
               document.getElementById?.('content') ||
               document.querySelector?.('.kolomPertama');
 
-    const buttonCover = link.closest?.('section, header, .e-con, .e-parent');
+    let buttonCover = link.closest?.('.cover, #sec-cover, #isi-cover, .e-parent, .elementor-top-section, section, header') ||
+                      link.closest?.('.e-con');
+    if (buttonCover?.parentElement?.closest?.('.cover, #sec-cover, #isi-cover')) {
+      buttonCover = buttonCover.parentElement.closest('.cover, #sec-cover, #isi-cover');
+    }
     if (buttonCover && buttonCover !== content && !buttonCover.contains?.(content)) {
       covers.add(buttonCover);
     }
@@ -184,12 +202,28 @@
     // Additional covers for openers that are not inside buttonCover
     for (const node of (document.querySelectorAll?.('a, button, #btnOpens, #tombolbuka, #tombol-buka, [role="button"]') || [])) {
       if (!isOpenLink(node)) continue;
-      const c = node.closest?.('section, header, .e-con, .e-parent');
+      let c = node.closest?.('.cover, #sec-cover, #isi-cover, .e-parent, .elementor-top-section, section, header') ||
+              node.closest?.('.e-con');
+      if (c?.parentElement?.closest?.('.cover, #sec-cover, #isi-cover')) {
+        c = c.parentElement.closest('.cover, #sec-cover, #isi-cover');
+      }
       if (c && c !== content && !c.contains?.(content)) covers.add(c);
     }
 
     if (!content) {
-      for (const el of (document.querySelectorAll?.('main, section, article, .elementor-section, .e-con') || [])) {
+      // First try immediate next element sibling of buttonCover that is not in covers
+      let sib = buttonCover?.nextElementSibling;
+      while (sib) {
+        if (!covers.has(sib) && !sib.contains?.(link)) {
+          content = sib;
+          break;
+        }
+        sib = sib.nextElementSibling;
+      }
+    }
+
+    if (!content) {
+      for (const el of (document.querySelectorAll?.('main, section, article, .elementor-section, .e-con.e-parent, .e-con') || [])) {
         let insideCover = false;
         for (const cover of covers) {
           if (cover === el || cover.contains?.(el)) { insideCover = true; break; }

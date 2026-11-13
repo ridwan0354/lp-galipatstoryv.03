@@ -97,6 +97,7 @@ export async function renderPreview(theme,photo){
  [class^=eicon-],[class*=" eicon-"]{font-family:'GS Elementor Icons'!important}
  .elementor-invisible{visibility:visible!important;opacity:1!important}
  #notSupport{display:none!important}
+ [data-gs-opened="true"] .stop-scrolling, body[data-gs-opened="true"].stop-scrolling{overflow:auto!important;height:auto!important}
  </style>`;
  // Keep external templates isolated in an opaque sandbox; never grant same-origin privileges.
  html=html.replace(/<head[^>]*>/i,match=>match+`<base href="${source.href.replaceAll('&','&amp;').replaceAll('"','&quot;')}">`+adapter+fonts);

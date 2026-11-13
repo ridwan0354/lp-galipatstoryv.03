@@ -138,3 +138,87 @@ test('animation theme with href="#home" scrolls directly to target #home', () =>
   assert.equal(coverSection.style.getPropertyValue('display'), 'none');
   assert.equal(homeTarget.scrolled, true);
 });
+
+test('exclusive theme TE#06 with nested e-parent cover and stop-scrolling opens and unlocks smoothly', () => {
+  const handlers = { document: {}, window: {} };
+  const style = () => {
+    const values = new Map();
+    return {
+      getPropertyValue: k => values.get(k)?.value || '',
+      getPropertyPriority: k => values.get(k)?.priority || '',
+      setProperty: (k, value, priority) => values.set(k, { value, priority })
+    };
+  };
+  const rootCover = {
+    style: style(),
+    contains: target => target === childCover || target === link,
+    nextElementSibling: null
+  };
+  const childCover = {
+    style: style(),
+    parentElement: rootCover,
+    contains: target => target === link
+  };
+  const mainContent = {
+    style: style(),
+    contains: () => false,
+    scrollIntoView() { this.scrolled = true; }
+  };
+  rootCover.nextElementSibling = mainContent;
+
+  const link = {
+    textContent: 'Buka Undangan',
+    getAttribute: () => '#',
+    matches: () => true,
+    closest: selector => {
+      if (selector.includes('.cover') || selector.includes('.e-parent')) return rootCover;
+      if (selector.includes('.e-con')) return childCover;
+      return null;
+    }
+  };
+  const span = { nodeType: 1, closest: () => link };
+  const root = { style: style(), dataset: {} };
+  const body = {
+    style: style(),
+    classList: {
+      classes: new Set(['stop-scrolling']),
+      add(c) { this.classes.add(c); },
+      remove(c) { this.classes.delete(c); },
+      contains(c) { return this.classes.has(c); }
+    }
+  };
+
+  let showAllSectCalled = false;
+  let enableScrollCalled = false;
+  let audioPlayed = false;
+
+  const window = {
+    onscroll: () => {},
+    parent: { postMessage() {} },
+    addEventListener: (k, fn) => handlers.window[k] = fn,
+    showAllSect: () => { showAllSectCalled = true; },
+    enableScroll: () => { enableScrollCalled = true; },
+    _playAudio: () => { audioPlayed = true; }
+  };
+
+  const document = {
+    documentElement: root,
+    body,
+    addEventListener: (k, fn) => handlers.document[k] = fn,
+    getElementById: id => id === 'tombolbuka' ? link : null,
+    querySelector: () => null,
+    querySelectorAll: () => [link]
+  };
+
+  vm.runInNewContext(code, { document, window, MutationObserver: class { observe() {} }, Math, Object });
+  const event = s => ({ target: s, preventDefault() {}, stopImmediatePropagation() {} });
+  handlers.document.click(event(span));
+
+  assert.equal(root.dataset.gsOpened, 'true');
+  assert.equal(rootCover.style.getPropertyValue('display'), 'none');
+  assert.equal(body.classList.contains('stop-scrolling'), false);
+  assert.equal(showAllSectCalled, true);
+  assert.equal(enableScrollCalled, true);
+  assert.equal(audioPlayed, true);
+  assert.equal(mainContent.scrolled, true);
+});
