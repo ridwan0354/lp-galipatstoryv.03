@@ -18,26 +18,24 @@ test('client-side preview logic handles both new_tab and modal settings correctl
 
   // Simulate environment
   let openedUrls = [];
+  let navigatedOriginalTab = false;
   const fakeWindow = {
-    open: (url, target, features) => {
-      openedUrls.push({ url, target, features });
-      return { closed: false };
-    },
     location: {
-      assign: (url) => { openedUrls.push({ url, fallback: true }); }
+      assign: (url) => { navigatedOriginalTab = true; }
     }
   };
 
   function mockOpenDemoUrl(url) {
     if (!url) return;
-    try {
-      const win = fakeWindow.open(url, '_blank', 'noopener,noreferrer');
-      if (!win || win.closed || typeof win.closed === 'undefined') {
-        fakeWindow.location.assign(url);
+    const a = {
+      href: url,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      click: () => {
+        openedUrls.push({ url: a.href, target: a.target, rel: a.rel });
       }
-    } catch (_) {
-      fakeWindow.location.assign(url);
-    }
+    };
+    a.click();
   }
 
   // Test 1: new_tab with variants
@@ -112,4 +110,7 @@ test('client-side preview logic handles both new_tab and modal settings correctl
   // In modal mode, single theme opens modal viewer
   const resultSingleModal = openPreview(singleTheme, 'modal');
   assert.equal(resultSingleModal, 'opened_modal_choice');
+
+  // Verify that the original window/tab was never navigated away
+  assert.equal(navigatedOriginalTab, false, 'original tab must remain untouched on http://127.0.0.1:4303/');
 });

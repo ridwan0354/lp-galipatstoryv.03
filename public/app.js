@@ -308,14 +308,13 @@ function showChoices(){
 }
 function openDemoUrl(url){
   if(!url)return;
-  try{
-    const win=window.open(url,'_blank','noopener,noreferrer');
-    if(!win||win.closed||typeof win.closed==='undefined'){
-      window.location.assign(url);
-    }
-  }catch(_){
-    window.location.assign(url);
-  }
+  const a=document.createElement('a');
+  a.href=url;
+  a.target='_blank';
+  a.rel='noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 function openPreview(theme){
   previewTheme=theme;
