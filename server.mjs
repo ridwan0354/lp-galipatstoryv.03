@@ -38,6 +38,8 @@ http.createServer(async(req,res)=>{try{
 const u=new URL(req.url,'http://localhost');const p=u.pathname;
 res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
 const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('gs_session='))?.slice(11);const logged=token&&sessions.get(token)>Date.now();
+if(p==='/go/tiktok'||p==='/go/tiktok/'){res.writeHead(302,{'Location':'https://www.tiktok.com/@galipat_story','Cache-Control':'no-cache'});return res.end();}
+if(p==='/go/instagram'||p==='/go/instagram/'){res.writeHead(302,{'Location':'https://www.instagram.com/galipat_story/','Cache-Control':'no-cache'});return res.end();}
 if(p==='/invitation-preview'&&req.method==='GET'){
 const theme=themes.find(t=>t.active&&t.id===u.searchParams.get('theme'));const photo=u.searchParams.get('version')==='photo';
 if(!theme||!supportsPreview(photo?theme.demoPhoto:theme.demo))return send(res,404,{error:'Contoh tidak tersedia.'});
