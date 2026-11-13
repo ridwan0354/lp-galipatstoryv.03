@@ -713,45 +713,107 @@ footer.site-footer {
 }
 @media(max-width: 600px) {
   .addons-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
   .addon-card {
-    padding: 14px 12px;
-    border-radius: 14px;
-    gap: 12px;
+    padding: 18px 16px;
+    border-radius: 16px;
+    gap: 14px;
+    box-shadow: 0 2px 10px rgba(35, 72, 62, 0.05);
+  }
+  .addon-top {
+    display: flex;
+    flex-direction: column;
+  }
+  .addon-badge-wrap {
+    margin-bottom: 10px;
   }
   .addon-icon {
-    font-size: 22px;
+    font-size: 26px;
   }
   .addon-pill {
-    font-size: 8.5px;
-    padding: 2px 6px;
+    font-size: 9.5px;
+    padding: 3px 8px;
   }
   .addon-title {
-    font-size: 13.5px;
+    font-size: 16px;
     margin-bottom: 6px;
   }
   .addon-desc {
-    font-size: 11px;
-    line-height: 1.45;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--muted);
   }
   .addon-foot {
-    padding-top: 10px;
-    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    gap: 12px;
+    border-top: 1px dashed rgba(18, 42, 34, 0.12);
+  }
+  .addon-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .addon-price-prefix {
+    font-size: 14px;
   }
   .addon-price-val {
-    font-size: 19px;
+    font-size: 22px;
   }
   .addon-price-unit {
-    font-size: 10px;
+    font-size: 11px;
   }
   .addon-btn {
-    padding: 7px 10px;
-    font-size: 10.5px;
+    padding: 9px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    flex-shrink: 0;
   }
   .addon-card-featured {
-    padding: 16px 14px;
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+  .addon-featured-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .addon-card-featured .addon-foot {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(18, 42, 34, 0.12);
+    gap: 12px;
+  }
+  .addon-card-featured .addon-foot .addon-price {
+    flex-shrink: 0;
+  }
+  .addon-card-featured .addon-price-val {
+    font-size: 24px;
+  }
+  .addon-card-featured .button {
+    font-size: 12px;
+    min-height: 40px;
+    padding: 9px 16px;
+    width: auto;
+    flex-shrink: 0;
+  }
+}
+@media(max-width: 380px) {
+  .addon-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .addon-btn {
+    width: 100%;
   }
   .addon-card-featured .addon-foot {
     flex-direction: column;
@@ -759,9 +821,6 @@ footer.site-footer {
     gap: 10px;
   }
   .addon-card-featured .button {
-    font-size: 12px;
-    min-height: 42px;
-    padding: 10px 16px;
     width: 100%;
   }
 }
