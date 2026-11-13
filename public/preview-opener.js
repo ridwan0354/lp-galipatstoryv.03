@@ -119,28 +119,23 @@
 
   function unlock() {
     window.onscroll = null;
-    document.body?.classList?.remove?.('stop-scrolling');
     for (const root of [document.documentElement, document.body]) {
       if (root) {
         forceStyle(root, 'overflow', 'auto');
         forceStyle(root, 'overflow-y', 'auto');
         forceStyle(root, 'height', 'auto');
-        root.classList?.remove?.('stop-scrolling');
+        if (root.classList?.contains?.('stop-scrolling')) {
+          root.classList.remove('stop-scrolling');
+        }
       }
     }
     document.querySelectorAll('.kolomPertama').forEach(node => forceStyle(node, 'display', 'block'));
     document.querySelectorAll('.not-open').forEach(node => node.classList?.remove?.('not-open'));
     for (const cover of covers) {
+      try { window.jQuery?.(cover)?.stop?.(true, false); } catch (_) {}
       forceStyle(cover, 'display', 'none');
       forceStyle(cover, 'visibility', 'hidden');
     }
-    try {
-      if (typeof window.showAllSect === 'function') window.showAllSect();
-      if (typeof window.enableScroll === 'function') window.enableScroll();
-      document.querySelectorAll?.('.elementor-top-section, .elementor-section').forEach?.(el => {
-        if (!covers.has(el) && el.style?.display === 'none') el.style.display = '';
-      });
-    } catch (_) {}
   }
 
   function openInvitation(event) {
@@ -162,8 +157,9 @@
       if (typeof window._playAudio === 'function') window._playAudio();
       if (typeof window.showAllSect === 'function') window.showAllSect();
       if (typeof window.enableScroll === 'function') window.enableScroll();
-      const tb = document.getElementById?.('tombolbuka') || document.getElementById?.('tombol-buka');
-      if (typeof tb?.onclick === 'function') tb.onclick(event);
+      document.querySelectorAll?.('.elementor-top-section, .elementor-section').forEach?.(el => {
+        if (el.style?.display === 'none') el.style.display = '';
+      });
     } catch (_) {}
 
     if (opened) return;
