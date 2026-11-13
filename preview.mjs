@@ -95,6 +95,8 @@ export async function renderPreview(theme,photo){
  .far,.fa-regular,.far:before{font-family:'GS Icons Regular'!important;font-weight:400!important;font-style:normal!important}
  .fab,.fa-brands,.fab:before{font-family:'GS Icons Brands'!important;font-weight:400!important;font-style:normal!important}
  [class^=eicon-],[class*=" eicon-"]{font-family:'GS Elementor Icons'!important}
+ .elementor-invisible{visibility:visible!important;opacity:1!important}
+ #notSupport{display:none!important}
  </style>`;
  // Keep external templates isolated in an opaque sandbox; never grant same-origin privileges.
  html=html.replace(/<head[^>]*>/i,match=>match+`<base href="${source.href.replaceAll('&','&amp;').replaceAll('"','&quot;')}">`+adapter+fonts);

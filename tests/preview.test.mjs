@@ -29,3 +29,13 @@ test('conflicting source openers are removed and early body observer waits for D
     assert.ok(html.includes('document.addEventListener("DOMContentLoaded",function(){mo.observe'));
   } finally { globalThis.fetch=originalFetch; }
 });
+
+test('preview injects styles to ensure elementor-invisible is visible and notSupport modal is hidden', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => new Response('<html><head></head><body><div class="elementor-invisible">Title</div><div id="notSupport">Alert</div></body></html>');
+    const html = await renderPreview({demo:'https://by.galipatstory.id/tanpa-te04/'}, false);
+    assert.ok(html.includes('.elementor-invisible{visibility:visible!important;opacity:1!important}'));
+    assert.ok(html.includes('#notSupport{display:none!important}'));
+  } finally { globalThis.fetch = originalFetch; }
+});

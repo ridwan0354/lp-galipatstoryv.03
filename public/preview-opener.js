@@ -18,6 +18,90 @@
     }
   } catch (_) {}
 
+  // Safe mock for storage so sandboxed iframes or Safari / in-app browsers never crash on SecurityError
+  try {
+    const createMemoryStorage = () => {
+      let store = {};
+      return {
+        getItem: key => Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null,
+        setItem: (key, val) => { store[key] = String(val); },
+        removeItem: key => { delete store[key]; },
+        clear: () => { store = {}; },
+        key: i => Object.keys(store)[i] || null,
+        get length() { return Object.keys(store).length; }
+      };
+    };
+    if (typeof window !== 'undefined') {
+      try {
+        const testK = '__gs_t__';
+        window.sessionStorage?.setItem(testK, '1');
+        window.sessionStorage?.removeItem(testK);
+      } catch (_) {
+        try {
+          Object.defineProperty(window, 'sessionStorage', { value: createMemoryStorage(), configurable: true, enumerable: true });
+        } catch (_) {}
+      }
+      try {
+        const testK = '__gs_t__';
+        window.localStorage?.setItem(testK, '1');
+        window.localStorage?.removeItem(testK);
+      } catch (_) {
+        try {
+          Object.defineProperty(window, 'localStorage', { value: createMemoryStorage(), configurable: true, enumerable: true });
+        } catch (_) {}
+      }
+    }
+  } catch (_) {}
+
+  // Scroll management: keep initial view at top (0, 0)
+  try {
+    if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      window.scrollTo(0, 0);
+    }
+  } catch (_) {}
+
+  function lockCover() {
+    if (opened) return;
+    for (const root of [document.documentElement, document.body]) {
+      if (root) {
+        forceStyle(root, 'overflow', 'hidden');
+        forceStyle(root, 'overflow-y', 'hidden');
+        forceStyle(root, 'height', '100%');
+      }
+    }
+    if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  function revealInvisible() {
+    try {
+      const invs = document.querySelectorAll?.('.elementor-invisible') || [];
+      for (const el of invs) {
+        el.classList?.remove?.('elementor-invisible');
+        el.style?.setProperty?.('visibility', 'visible', 'important');
+        el.style?.setProperty?.('opacity', '1', 'important');
+      }
+      const notSupp = document.getElementById?.('notSupport');
+      if (notSupp) notSupp.remove();
+    } catch (_) {}
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener?.('DOMContentLoaded', () => { lockCover(); revealInvisible(); });
+    } else {
+      lockCover();
+      revealInvisible();
+    }
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener?.('load', () => { if (!opened) lockCover(); revealInvisible(); });
+  }
+
   function isOpenLink(node) {
     if (!node) return false;
     return Boolean(
