@@ -1,0 +1,47 @@
+[
+  {
+    "id": "eksklusif",
+    "name": "Eksklusif",
+    "note": "Tanpa foto Rp99.000 · Dengan foto Rp149.000. Desain tidak dapat digabung atau diganti warna."
+  },
+  {
+    "id": "premium",
+    "name": "Premium",
+    "note": "Tanpa foto Rp99.000 · Dengan foto Rp129.000. Penyesuaian warna tercatat untuk PR#20–PR#28."
+  },
+  {
+    "id": "adat",
+    "name": "Adat",
+    "note": ""
+  },
+  {
+    "id": "animasi",
+    "name": "Animasi",
+    "note": ""
+  },
+  {
+    "id": "movement",
+    "name": "Movement",
+    "note": ""
+  },
+  {
+    "id": "klasik",
+    "name": "Klasik",
+    "note": ""
+  },
+  {
+    "id": "floral",
+    "name": "Floral",
+    "note": ""
+  },
+  {
+    "id": "syukuran",
+    "name": "Syukuran",
+    "note": ""
+  },
+  {
+    "id": "tema-v02",
+    "name": "Tema V.02",
+    "note": "Tanpa foto Rp79.000 · Dengan foto Rp109.000. Tema tidak dapat di mix atau ganti warna. Free barcode."
+  }
+]

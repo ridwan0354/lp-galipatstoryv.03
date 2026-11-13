@@ -1,0 +1,7 @@
+data/admin-secret.json
+AKSES-ADMIN.txt
+public/uploads/
+node_modules/
+*.tmp
+.DS_Store
+
