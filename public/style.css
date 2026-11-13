@@ -554,7 +554,7 @@ footer.site-footer {
 }
 .addons-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 .addon-card {
@@ -667,32 +667,9 @@ footer.site-footer {
   color: #ffffff;
   border-color: var(--green);
 }
-
-/* Card 5 Featured (Full width) */
 .addon-card-featured {
-  grid-column: 1 / -1;
   background: linear-gradient(135deg, #ffffff 0%, #f7f9f3 100%);
-  border: 1px solid #cbd7c4;
-}
-.addon-featured-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 28px;
-  width: 100%;
-}
-.addon-featured-info {
-  flex: 1;
-}
-.addon-card-featured .addon-foot {
-  flex-direction: row;
-  align-items: center;
-  gap: 20px;
-  padding-top: 0;
-  border-top: 0;
-}
-.addon-card-featured .addon-price-val {
-  font-size: 26px;
+  border-color: #cbd7c4;
 }
 
 /* Mobile responsive optimization for Add-ons */
@@ -701,131 +678,101 @@ footer.site-footer {
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
   }
-  .addon-featured-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  .addon-card-featured .addon-foot {
-    width: 100%;
-    justify-content: space-between;
-    padding-top: 14px;
-    border-top: 1px dashed rgba(18, 42, 34, 0.1);
-  }
 }
 @media(max-width: 600px) {
   .addons-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   .addon-card {
-    padding: 18px 16px;
-    border-radius: 16px;
-    gap: 14px;
-    box-shadow: 0 2px 10px rgba(35, 72, 62, 0.05);
+    padding: 16px 12px;
+    border-radius: 14px;
+    gap: 10px;
+    box-shadow: 0 2px 8px rgba(35, 72, 62, 0.04);
   }
   .addon-top {
-    display: flex;
-    flex-direction: column;
+    display: block;
   }
   .addon-badge-wrap {
-    margin-bottom: 10px;
-  }
-  .addon-icon {
-    font-size: 26px;
-  }
-  .addon-pill {
-    font-size: 9.5px;
-    padding: 3px 8px;
-  }
-  .addon-title {
-    font-size: 16px;
-    margin-bottom: 6px;
-  }
-  .addon-desc {
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--muted);
-  }
-  .addon-foot {
-    flex-direction: row;
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 14px;
-    gap: 12px;
-    border-top: 1px dashed rgba(18, 42, 34, 0.12);
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .addon-icon {
+    font-size: 22px;
+  }
+  .addon-pill {
+    font-size: 8.5px;
+    padding: 2px 6px;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+  .addon-title {
+    font-size: 14px;
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .addon-desc {
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .addon-desc strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .addon-foot {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 10px;
+    gap: 8px;
+    border-top: 1px dashed rgba(18, 42, 34, 0.1);
   }
   .addon-price {
     display: flex;
     align-items: baseline;
-    gap: 4px;
-    flex-shrink: 0;
+    gap: 3px;
   }
   .addon-price-prefix {
-    font-size: 14px;
+    font-size: 13px;
   }
   .addon-price-val {
-    font-size: 22px;
+    font-size: 18px;
   }
   .addon-price-unit {
+    font-size: 9.5px;
+  }
+  .addon-btn {
+    width: 100%;
+    padding: 8px 6px;
     font-size: 11px;
-  }
-  .addon-btn {
-    padding: 9px 18px;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 8px;
-    flex-shrink: 0;
-  }
-  .addon-card-featured {
-    padding: 18px 16px;
-    border-radius: 16px;
-  }
-  .addon-featured-inner {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-  }
-  .addon-card-featured .addon-foot {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 14px;
-    border-top: 1px dashed rgba(18, 42, 34, 0.12);
-    gap: 12px;
-  }
-  .addon-card-featured .addon-foot .addon-price {
-    flex-shrink: 0;
-  }
-  .addon-card-featured .addon-price-val {
-    font-size: 24px;
-  }
-  .addon-card-featured .button {
-    font-size: 12px;
-    min-height: 40px;
-    padding: 9px 16px;
-    width: auto;
-    flex-shrink: 0;
+    min-height: 34px;
+    border-radius: 7px;
   }
 }
-@media(max-width: 380px) {
-  .addon-foot {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+@media(max-width: 360px) {
+  .addons-grid {
+    gap: 6px;
+  }
+  .addon-card {
+    padding: 12px 8px;
+  }
+  .addon-title {
+    font-size: 13px;
+  }
+  .addon-desc {
+    font-size: 10.5px;
   }
   .addon-btn {
-    width: 100%;
-  }
-  .addon-card-featured .addon-foot {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-  .addon-card-featured .button {
-    width: 100%;
+    padding: 7px 4px;
+    font-size: 10px;
+    min-height: 32px;
   }
 }
+
 
 
 
