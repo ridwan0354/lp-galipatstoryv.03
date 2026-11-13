@@ -333,6 +333,11 @@ function openPreview(theme){
   document.getElementById('choose-photo').hidden=!theme.demoPhoto;
   document.getElementById('choose-no-photo').querySelector('strong').textContent=theme.demoPhoto?'Tanpa Foto':'Lihat contoh tema';
   document.getElementById('choose-no-photo').querySelector('small').textContent=theme.demoPhoto?'Desain undangan tanpa foto mempelai →':'Lihat tampilan undangan ini →';
+  const initialUrl=theme.demo||theme.demoPhoto;
+  const initialHelp=document.getElementById('preview-help-open-tab');
+  if(initialHelp&&initialUrl)initialHelp.href=initialUrl;
+  const initialTab=document.getElementById('preview-open-tab');
+  if(initialTab&&initialUrl)initialTab.href=initialUrl;
 
   previousPreviewFocus=document.activeElement;
   previewOverlay.hidden=false;
@@ -397,6 +402,22 @@ if(togglePhoto)togglePhoto.onclick=()=>{if(previewVersion!=='Dengan Foto')loadPr
 if(previewFav)previewFav.onclick=()=>{if(previewTheme)toggleFavorite(previewTheme.id);};
 document.getElementById('preview-switch').onclick=showChoices;
 document.getElementById('preview-retry').onclick=()=>loadPreview(previewVersion==='Dengan Foto');
+const helpOpenTab=document.getElementById('preview-help-open-tab');
+if(helpOpenTab){
+  helpOpenTab.onclick=(e)=>{
+    e.preventDefault();
+    const targetUrl=(previewVersion==='Dengan Foto'&&previewTheme?.demoPhoto)?previewTheme.demoPhoto:(previewTheme?.demo||helpOpenTab.getAttribute('href'));
+    if(targetUrl&&targetUrl!=='#')openDemoUrl(targetUrl);
+  };
+}
+const openTab=document.getElementById('preview-open-tab');
+if(openTab){
+  openTab.onclick=(e)=>{
+    e.preventDefault();
+    const targetUrl=(previewVersion==='Dengan Foto'&&previewTheme?.demoPhoto)?previewTheme.demoPhoto:(previewTheme?.demo||openTab.getAttribute('href'));
+    if(targetUrl&&targetUrl!=='#')openDemoUrl(targetUrl);
+  };
+}
 function closePreviewModal(){
   clearTimeout(previewTimer);
   if(previewLoader)previewLoader.hidden=true;
