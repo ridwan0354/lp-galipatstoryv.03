@@ -59,6 +59,12 @@ NGINX_TEMPLATE='server {
 
     client_max_body_size 10M;
 
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml font/woff2;
+
     location / {
         proxy_pass http://127.0.0.1:PORT_NUM;
         proxy_http_version 1.1;
@@ -83,6 +89,12 @@ server {
     ssl_ciphers HIGH:!aNULL:!MD5;
 
     client_max_body_size 10M;
+
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml application/json application/javascript application/rss+xml application/atom+xml image/svg+xml font/woff2;
 
     location / {
         proxy_pass http://127.0.0.1:PORT_NUM;

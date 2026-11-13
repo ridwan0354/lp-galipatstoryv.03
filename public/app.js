@@ -121,7 +121,7 @@ function render(){
     image.onclick=()=>openPreview(t);
     image.setAttribute('aria-label',`Lihat contoh ${t.name}`);
     const img=el('img');
-    Object.assign(img,{src:t.image,alt:`Preview undangan ${t.name}`,loading:'lazy',width:480,height:600});
+    Object.assign(img,{src:t.image,alt:`Preview undangan ${t.name}`,loading:'lazy',decoding:'async',width:480,height:600});
     const tagText=(t.category==='Tema V.02'&&t.subCategory)?(v02SubMap[t.subCategory]||'Tema V.02'):t.category;
     image.append(img,el('span','theme-tag',tagText));
     
