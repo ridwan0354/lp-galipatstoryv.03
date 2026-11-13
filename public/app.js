@@ -538,9 +538,9 @@ if(heroCard&&heroMockup&&window.matchMedia('(hover: hover)').matches){
     timeEl.textContent = selected.timeAgo || 'Baru saja';
 
     toastEl.hidden = false;
-    // Force browser reflow before adding .show class
-    void toastEl.offsetWidth;
-    toastEl.classList.add('show');
+    requestAnimationFrame(()=>{
+      toastEl.classList.add('show');
+    });
 
     // Keep visible for 5.5 seconds
     toastTimer = setTimeout(()=>{
