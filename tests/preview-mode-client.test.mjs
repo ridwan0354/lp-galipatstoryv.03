@@ -10,6 +10,11 @@ test('client-side preview logic handles both new_tab and modal settings correctl
   assert.ok(appJs.includes('function openDemoUrl(url)'), 'openDemoUrl function should exist');
   assert.ok(appJs.includes("siteSettings.previewMode==='new_tab'"), 'should check siteSettings.previewMode');
   assert.ok(appJs.includes("fetch('/api/settings')"), 'should fetch /api/settings');
+  assert.ok(appJs.includes('preview-help-open-tab'), 'should update preview-help-open-tab href');
+
+  const indexHtml = await fs.readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.ok(indexHtml.includes('id="preview-help-open-tab"'), 'index.html should contain preview-help-open-tab link');
+  assert.ok(indexHtml.includes('buka di tab baru'), 'index.html should have buka di tab baru text');
 
   // Simulate environment
   let openedUrls = [];

@@ -381,6 +381,8 @@ function loadPreview(photo){
   buy.dataset.theme=previewTheme.name;
   const openTab=document.getElementById('preview-open-tab');
   if(openTab)openTab.href=url;
+  const helpOpenTab=document.getElementById('preview-help-open-tab');
+  if(helpOpenTab)helpOpenTab.href=url;
   previewTimer=setTimeout(()=>{document.getElementById('preview-status').textContent='Contoh disediakan oleh server undangan. Jika belum tampil, coba muat ulang.';},15000);
 }
 frame.addEventListener('load',()=>{
