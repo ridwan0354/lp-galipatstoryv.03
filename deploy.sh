@@ -42,23 +42,28 @@ pm2 delete "$DOMAIN" >/dev/null 2>&1 || true
 PORT=$PORT pm2 start server.mjs --name "$DOMAIN" --time
 pm2 save
 
-# 4. Buat konfigurasi Nginx aman (tidak mengganggu proyek lain)
-echo "🌐 Mengonfigurasi Nginx reverse proxy..."
-if [ -d "/etc/nginx/sites-available" ]; then
-  CONF_PATH="/etc/nginx/sites-available/$DOMAIN"
-  cat << 'EOF' > "$CONF_PATH"
-server {
+# 4. Buat Sertifikat SSL untuk Cloudflare Full mode
+echo "🔒 Membuat sertifikat SSL untuk port 443..."
+mkdir -p /etc/ssl/certs /etc/ssl/private
+openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+  -keyout /etc/ssl/private/$DOMAIN.key \
+  -out /etc/ssl/certs/$DOMAIN.crt \
+  -subj "/CN=$DOMAIN" >/dev/null 2>&1
+
+# 5. Buat konfigurasi Nginx (Port 80 & Port 443)
+echo "🌐 Mengonfigurasi Nginx reverse proxy (Port 80 & 443)..."
+NGINX_TEMPLATE='server {
     listen 80;
     listen [::]:80;
-    server_name lp.galipatstory.com;
+    server_name DOMAIN_NAME;
 
     client_max_body_size 10M;
 
     location / {
-        proxy_pass http://127.0.0.1:4303;
+        proxy_pass http://127.0.0.1:PORT_NUM;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
         proxy_set_header X-Real-IP $remote_addr;
@@ -66,39 +71,42 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-EOF
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name DOMAIN_NAME;
+
+    ssl_certificate /etc/ssl/certs/DOMAIN_NAME.crt;
+    ssl_certificate_key /etc/ssl/private/DOMAIN_NAME.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    client_max_body_size 10M;
+
+    location / {
+        proxy_pass http://127.0.0.1:PORT_NUM;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}'
+
+CONFIG_CONTENT=$(echo "$NGINX_TEMPLATE" | sed "s/DOMAIN_NAME/$DOMAIN/g" | sed "s/PORT_NUM/$PORT/g")
+
+if [ -d "/etc/nginx/sites-available" ]; then
+  CONF_PATH="/etc/nginx/sites-available/$DOMAIN"
+  echo "$CONFIG_CONTENT" > "$CONF_PATH"
   ln -sf "$CONF_PATH" "/etc/nginx/sites-enabled/$DOMAIN"
 elif [ -d "/etc/nginx/conf.d" ]; then
   CONF_PATH="/etc/nginx/conf.d/$DOMAIN.conf"
-  cat << 'EOF' > "$CONF_PATH"
-server {
-    listen 80;
-    server_name lp.galipatstory.com;
-
-    client_max_body_size 10M;
-
-    location / {
-        proxy_pass http://127.0.0.1:4303;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-EOF
+  echo "$CONFIG_CONTENT" > "$CONF_PATH"
 fi
-
-# 5. Pasang SSL via Certbot untuk Cloudflare Full mode
-echo "🔒 Memasang sertifikat SSL via Certbot..."
-if ! command -v certbot >/dev/null 2>&1; then
-  (apt-get update -y && apt-get install -y certbot python3-certbot-nginx) || (yum install -y certbot python3-certbot-nginx) || true
-fi
-
-certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email --redirect 2>/dev/null || true
 
 # 6. Verifikasi dan reload Nginx
 echo "🔄 Memeriksa dan memuat ulang Nginx..."
