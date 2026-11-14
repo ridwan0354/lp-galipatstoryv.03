@@ -25,7 +25,7 @@ form .button{margin-top:10px}
 .admin-search-label{flex:1;margin:0}
 .admin-check-label{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;margin:0;padding-bottom:10px;white-space:nowrap}
 .admin-check-label input{cursor:pointer}
-.admin-table{overflow-x:auto;margin:14px 0 20px}
+.admin-table{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0 20px;border-radius:8px}
 table{width:100%;border-collapse:collapse;min-width:620px;text-align:left;font-size:13px}
 td,th{padding:13px 12px;border-bottom:1px solid var(--line)}
 th{color:#526358;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;background:#f8faf6}
@@ -142,10 +142,13 @@ button:disabled{opacity:.5;cursor:wait}
 .subcard-title-row h3{font-size:15.5px;margin:0;color:var(--ink)}
 .subcard-title-row small,.subcard-hint{font-size:12px;color:var(--muted);display:block;margin-top:2px}
 .analytics-search-input{max-width:240px;min-height:36px;padding:6px 12px;font-size:13px;border:1px solid #c5d1bf;border-radius:8px}
-.analytics-table-wrap{overflow-x:auto}
+
+/* Enhanced Table Wrap with Smooth Touch Scroll */
+.analytics-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e1e9dd;border-radius:8px;background:#fff}
 .analytics-daily-scroll{max-height:360px;overflow-y:auto}
-.analytics-panel table{min-width:460px;font-size:12.5px}
-.analytics-panel td,.analytics-panel th{padding:10px 10px;vertical-align:middle}
+.analytics-panel table{min-width:540px;font-size:12.5px;border-collapse:collapse}
+.analytics-panel th{padding:10px 12px;vertical-align:middle;white-space:nowrap;background:#f7faf5;color:#495c50;font-size:11px;font-weight:700;border-bottom:1.5px solid #dbe4d7}
+.analytics-panel td{padding:11px 12px;vertical-align:middle;white-space:nowrap;border-bottom:1px solid #edf2ea}
 .analytics-panel td:first-child{display:table-cell}
 .analytics-comp-table tbody tr{cursor:pointer;transition:background .12s}
 .analytics-comp-table tbody tr:hover{background:#f2f7ef}
@@ -168,21 +171,89 @@ button:disabled{opacity:.5;cursor:wait}
 .bar-mini{width:60px;height:7px;background:#e5ebe0;border-radius:99px;overflow:hidden}
 .bar-mini-fill{height:100%;background:#1f4438;border-radius:99px}
 
+/* ==========================================
+   RESPONSIVE LAYOUT FOR TABLETS & MOBILES
+   ========================================== */
 @media(max-width:1024px){
   .analytics-control-grid,.settings-grid-layout,.analytics-two-col{grid-template-columns:1fr}
   .analytics-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .analytics-subnav{justify-content:flex-start}
 }
+
 @media(max-width:768px){
-  .admin-main-nav,.analytics-tabs-bar,.settings-options{grid-template-columns:1fr}
+  .admin-main-nav,.settings-options{grid-template-columns:1fr}
   .admin-section-block,.settings-card,.analytics-panel{padding:16px}
   .analytics-kpi-grid{grid-template-columns:1fr 1fr}
   .kpi-value{font-size:26px}
 }
-@media(max-width:600px){
-  .admin-heading{display:block}
-  .admin-heading>div:last-child{margin:18px 0 0}
+
+/* Specific Dedicated Mobile Polish (< 640px) */
+@media(max-width:640px){
+  .admin-body{padding-bottom:36px}
+  .admin-body .wrap{padding-left:10px;padding-right:10px}
+  .nav-right-links{display:none}
+  .nav{height:68px}
+  
+  .admin-heading{display:block;margin-top:16px;padding-bottom:14px}
+  .admin-heading h1{font-size:28px;margin-bottom:6px}
+  .admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:14px}
+  .admin-actions .button{min-height:42px;padding:8px 10px;font-size:12px;justify-content:center;text-align:center}
+  .btn-analytics-toggle{grid-column:1/-1}
+
+  .admin-main-nav{margin:14px 0 18px;gap:8px}
+  .admin-nav-tab{padding:12px 14px;border-radius:10px}
+  .admin-nav-tab span{font-size:13.5px}
+  .admin-nav-tab small{font-size:11.5px}
+
+  .analytics-panel{padding:12px;border-radius:12px;margin:0 0 20px;border-width:1px}
+  .analytics-header{gap:12px;margin-bottom:14px;padding-bottom:12px}
+  .analytics-header h2{font-size:20px;line-height:1.25}
+  .analytics-header p.quiet{font-size:12px}
+  .analytics-header-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .analytics-header-actions .button{font-size:11px;min-height:38px;padding:6px 8px;justify-content:center}
+  #close-analytics{grid-column:1/-1}
+
+  .analytics-control-grid{gap:8px;margin-bottom:10px}
+  .analytics-month-bar,.analytics-page-selector-box{padding:10px 12px;border-radius:10px}
+  .analytics-month-info strong{font-size:14px}
+  .analytics-month-pills{gap:6px}
+  .month-pill-btn{padding:7px 11px;font-size:11.5px;border-radius:7px}
+  .analytics-tabs-bar{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:4px}
+  .analytics-tab{padding:8px 6px;font-size:11.5px;border-radius:6px}
+
+  .analytics-current-banner{padding:8px 12px;font-size:12px;margin-bottom:12px;border-radius:8px}
+
+  .analytics-kpi-grid{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .kpi-card{padding:12px 10px;border-radius:10px}
+  .kpi-tag{font-size:9px}
+  .kpi-value{font-size:23px;margin:2px 0}
+  .kpi-label{font-size:12px}
+  .kpi-note{font-size:10px;line-height:1.3}
+
+  .analytics-subnav-wrap{flex-direction:column;align-items:stretch;gap:8px;padding:10px;margin:12px 0;border-radius:10px}
+  .subnav-label{font-size:10px}
+  .analytics-subnav{flex-direction:column;gap:5px;width:100%}
+  .subnav-btn{width:100%;text-align:left;padding:8px 12px;font-size:12px;border-radius:7px}
+
+  .analytics-subcard{padding:12px 10px;border-radius:10px;margin-bottom:10px}
+  .subcard-title-row{flex-direction:column;align-items:stretch;gap:6px;margin-bottom:10px}
+  .subcard-title-row h3{font-size:14px}
+  .subcard-title-row small,.subcard-hint{font-size:11px}
+  .analytics-search-input{max-width:100%;width:100%;min-height:38px;box-sizing:border-box}
+
+  /* Table Horizontal Scrolling Optimization on Mobile */
+  .analytics-table-wrap{margin:0 -2px;border-radius:6px}
+  .analytics-panel table{min-width:480px;font-size:11.5px}
+  .analytics-panel th{padding:8px 10px;font-size:10px}
+  .analytics-panel td{padding:9px 10px;font-size:11.5px}
+
+  .admin-section-block{padding:14px 10px;border-radius:12px}
+  .admin-toolbar{flex-direction:column;align-items:stretch;gap:10px}
+  .admin-search-label input{min-height:42px}
+  .settings-card{padding:14px 10px;border-radius:10px}
+
   .form-grid{grid-template-columns:1fr}
   .checks{display:block}
-  dialog{padding:20px}
+  dialog{padding:16px;border-radius:12px}
+  .editor-heading h2{font-size:22px}
 }
