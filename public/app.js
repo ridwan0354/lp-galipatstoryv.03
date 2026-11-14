@@ -17,7 +17,43 @@ document.querySelectorAll('.wa').forEach(a=>{
   a.target='_blank';
   a.rel='noopener noreferrer';
 });
-document.addEventListener('click',e=>{const a=e.target.closest('a.wa');if(a&&typeof window.fbq==='function'){window.fbq('trackCustom','WhatsAppClick',{location:a.dataset.location||'catalog',theme_code:a.dataset.theme||''});window.fbq('track','Contact',{content_name:a.dataset.theme||'WhatsApp',content_category:a.dataset.location||'catalog'});}});
+function getVisitorId(){
+  try{
+    let vid=localStorage.getItem('gs_vid');
+    if(!vid||!/^[a-zA-Z0-9_-]{8,64}$/.test(vid)){
+      const m=(document.cookie||'').match(/(?:^|;\s*)gs_vid=([a-zA-Z0-9_-]{8,64})/);
+      vid=m?m[1]:('gs_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12));
+      localStorage.setItem('gs_vid',vid);
+    }
+    document.cookie=`gs_vid=${vid}; path=/; max-age=2592000; SameSite=Lax`;
+    return vid;
+  }catch(_){return '';}
+}
+function getCurrentPageKey(){
+  const p=(window.location.pathname||'').toLowerCase();
+  if(p.includes('web-invitation'))return 'web';
+  if(p.includes('/tema'))return 'tema';
+  return 'home';
+}
+function sendTrackEvent(payload){
+  try{
+    const body=JSON.stringify({...payload,visitorId:getVisitorId(),page:getCurrentPageKey()});
+    fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
+  }catch(_){}
+}
+sendTrackEvent({type:'visit'});
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a.wa, a[data-location^="addon-"]');
+  if(!a)return;
+  const loc=a.dataset.location||'other';
+  const thm=a.dataset.theme||'';
+  const cat=a.dataset.category||'';
+  sendTrackEvent({type:'wa_click',location:loc,theme:thm,category:cat});
+  if(a.classList.contains('wa')&&typeof window.fbq==='function'){
+    window.fbq('trackCustom','WhatsAppClick',{location:loc||'catalog',theme_code:thm});
+    window.fbq('track','Contact',{content_name:thm||'WhatsApp',content_category:loc||'catalog'});
+  }
+});
 const notes={'Bestseller':'Koleksi tema terfavorit dan paling banyak dipilih calon pengantin.','Favorit':'Daftar tema yang kalian tandai bintang ★ untuk memudahkan perbandingan.','Eksklusif':'Tanpa foto Rp99.000 · Dengan foto Rp149.000. Desain tidak dapat digabung atau diganti warna.','Premium':'Tanpa foto Rp99.000 · Dengan foto Rp129.000. Penyesuaian warna tercatat untuk PR#20–PR#28.','Tema V.02':'Tanpa foto Rp79.000 · Dengan foto Rp109.000. Tema tidak dapat di mix atau ganti warna. Free barcode.'};
 const isHidePrice=typeof document!=='undefined'&&(document.body.classList.contains('hide-pricing-page')||window.location.pathname.includes('web-invitation'));
 const notesHidePrice={'Bestseller':'Koleksi tema terfavorit dan paling banyak dipilih calon pengantin.','Favorit':'Daftar tema yang kalian tandai bintang ★ untuk memudahkan perbandingan.','Eksklusif':'Desain eksklusif siap pakai. Desain tidak dapat digabung atau diganti warna.','Premium':'Desain bernuansa premium. Penyesuaian warna tercatat untuk PR#20–PR#28.','Tema V.02':'Pilihan tema serbaguna siap pakai. Free barcode.'};
@@ -163,6 +199,7 @@ function render(){
     buy.innerHTML='Pilih tema ini '+ARROW_SVG;
     Object.assign(buy,{href:wa(`${t.name} (${t.category})`),target:'_blank',rel:'noopener noreferrer'});
     buy.dataset.theme=t.name;
+    buy.dataset.category=t.category||'';
     buy.dataset.location='theme-card';
     buy.setAttribute('aria-label',`Pilih tema ${t.name} melalui WhatsApp`);
     actions.append(preview,buy);
@@ -383,6 +420,7 @@ function loadPreview(photo){
   const buy=document.getElementById('preview-buy');
   buy.href=wa(`${previewTheme.name} (${previewTheme.category}) — ${previewVersion}`);
   buy.dataset.theme=previewTheme.name;
+  buy.dataset.category=previewTheme.category||'';
   const openTab=document.getElementById('preview-open-tab');
   if(openTab)openTab.href=url;
   const helpOpenTab=document.getElementById('preview-help-open-tab');

@@ -1,1 +1,177 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin — Galipat Story</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/favicon.png"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/admin.css"><script defer src="/admin.js"></script></head><body class="admin-body"><nav class="nav wrap"><a href="/" class="brand">GALIPAT STORY <small>/ ADMIN</small></a><a href="/" target="_blank" rel="noopener">Lihat website ↗</a></nav><main class="wrap"><p id="notice" role="status"></p><section id="login" class="login"><p class="eyebrow">RUANG KELOLA KATALOG</p><h1>Selamat datang.</h1><p>Masuk untuk merawat koleksi tema Galipat Story.</p><form id="login-form"><label>Nama pengguna<input name="username" autocomplete="username" required value="admin"></label><label>Kata sandi<input name="password" type="password" autocomplete="current-password" required></label><button class="button">Masuk ke admin ↗</button></form></section><section id="dashboard" hidden><div class="admin-heading"><div><p class="eyebrow">KATALOG GALIPAT STORY</p><h1>Kelola koleksi.</h1><p id="stats"></p></div><div class="admin-actions"><button id="new" class="button">+ Tambah tema</button> <button id="new-cat-btn" class="button outline">+ Tambah kategori</button> <button id="logout" class="button outline">Keluar</button></div></div><div class="admin-toolbar"><label class="admin-search-label">Cari nama atau kategori<input id="admin-search" placeholder="Cari tema…" type="search"></label><label class="admin-check-label"><input type="checkbox" id="filter-bestseller-only"> ⭐ Hanya Bestseller</label></div><div class="admin-table"><table><thead><tr><th>Tema</th><th>Kategori</th><th>Harga</th><th>Bestseller</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="rows"></tbody></table></div><button id="load-more" class="button outline">Tampilkan lainnya</button><div class="settings-card"><div class="settings-card-header"><p class="eyebrow">PENGATURAN TAMPILAN</p><h2>Mode Pratinjau Tema (Lihat Contoh)</h2><p class="quiet">Tentukan cara website menampilkan contoh undangan saat calon pengantin menekan tombol <strong>Lihat contoh</strong> atau memilih versi <strong>Dengan Foto / Tanpa Foto</strong>.</p></div><form id="settings-form"><div class="settings-options"><label class="settings-radio"><input type="radio" name="previewMode" value="new_tab"><div class="settings-radio-text"><div class="settings-title-row"><strong>Buka Langsung di Tab Baru</strong><span class="settings-badge-rec">Rekomendasi</span></div><small>Setelah calon pengantin memilih Dengan Foto / Tanpa Foto, undangan langsung terbuka utuh di tab browser baru calon pengantin tanpa batasan frame.</small></div></label><label class="settings-radio"><input type="radio" name="previewMode" value="modal"><div class="settings-radio-text"><div class="settings-title-row"><strong>Buka di Pop-up HP (Modal)</strong></div><small>Undangan dimuat di dalam bingkai simulasi HP di halaman website yang sama.</small></div></label></div><div class="settings-btn-row"><button type="submit" id="save-settings-btn" class="button">Simpan pengaturan pratinjau</button><span id="settings-save-notice" class="settings-save-notice" role="status"></span></div></form></div><details class="password-box"><summary>Ganti kata sandi admin</summary><form id="password-form"><label>Kata sandi saat ini<input name="current" type="password" autocomplete="current-password" required></label><label>Kata sandi baru (minimal 12 karakter)<input name="password" type="password" autocomplete="new-password" minlength="12" required></label><button class="button">Simpan kata sandi baru</button></form></details></section></main><dialog id="editor"><form id="theme-form"><div class="editor-heading"><h2 id="editor-title">Tambah tema</h2><button type="button" id="close" class="button outline small">Tutup ×</button></div><input name="id" type="hidden"><div class="form-grid"><label>Nama / kode tema<input name="name" required maxlength="120" placeholder="Contoh: TE#64"></label><label>Kategori<div class="category-select-row"><select name="category" id="theme-category-select" required></select><button type="button" id="btn-quick-cat" class="button outline small">+ Kategori Baru</button></div></label><label>Harga tanpa foto (Rp)<input name="price" type="number" min="0" step="1" required></label><label>Harga dengan foto (Rp)<input name="photoPrice" type="number" min="0" step="1" required></label></div><label>Link contoh utama / tanpa foto (HTTPS)<input name="demo" type="url" required placeholder="https://…"></label><label>Link contoh dengan foto (opsional, HTTPS)<input name="demoPhoto" type="url" placeholder="https://…"></label><p class="quiet">Isi kedua link jika tema memiliki versi tanpa foto dan dengan foto. Kosongkan link dengan foto bila hanya tersedia satu contoh.</p><label>Gambar preview (URL HTTPS atau lokasi aset)<input name="image" required placeholder="/assets/images/…"></label><label>Atau unggah gambar · WebP / JPG / PNG · maks. 3 MB<input id="upload" type="file" accept="image/webp,image/png,image/jpeg"></label><img id="image-preview" alt="Preview tema" hidden><label>Catatan ketentuan desain<textarea name="note" rows="2" maxlength="500"></textarea></label><div class="checks"><label><input name="active" type="checkbox" checked> Tampilkan di website</label><label><input name="bestseller" type="checkbox"> ⭐ Tema Bestseller</label><label><input name="featured" type="checkbox"> Prioritaskan di katalog</label></div><p id="editor-message" role="status"></p><button id="save" class="button">Simpan tema</button></form></dialog><dialog id="category-dialog"><div class="editor-heading"><h2 id="cat-editor-title">Kelola Kategori</h2><button type="button" id="cat-close" class="button outline small">Tutup ×</button></div><form id="category-form"><label>Nama kategori baru<input name="name" id="new-cat-name" required maxlength="60" placeholder="Contoh: Minimalis, Muslim Modern, dll."></label><label>Keterangan / catatan harga kategori (opsional)<textarea name="note" id="new-cat-note" rows="2" maxlength="300" placeholder="Contoh: Tanpa foto Rp89.000 · Dengan foto Rp119.000"></textarea></label><p class="quiet">Kategori baru akan otomatis muncul di pilihan kategori tema dan tab filter halaman utama website.</p><p id="cat-message" role="status"></p><button id="save-cat" class="button">+ Simpan Kategori Baru</button></form><div class="category-list-section"><h3>Daftar Kategori Aktif</h3><ul id="existing-cat-list" class="existing-cat-list"></ul></div></dialog></body></html>
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin — Galipat Story</title><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/favicon.png"><link rel="stylesheet" href="/style.css?v=3.1.0"><link rel="stylesheet" href="/admin.css?v=3.1.0"><script defer src="/admin.js?v=3.1.0"></script></head><body class="admin-body"><nav class="nav wrap"><a href="/" class="brand">GALIPAT STORY <small>/ ADMIN</small></a><a href="/" target="_blank" rel="noopener">Lihat website ↗</a></nav><main class="wrap"><p id="notice" role="status"></p><section id="login" class="login"><p class="eyebrow">RUANG KELOLA KATALOG</p><h1>Selamat datang.</h1><p>Masuk untuk merawat koleksi tema Galipat Story.</p><form id="login-form"><label>Nama pengguna<input name="username" autocomplete="username" required value="admin"></label><label>Kata sandi<input name="password" type="password" autocomplete="current-password" required></label><button class="button">Masuk ke admin ↗</button></form></section><section id="dashboard" hidden><div class="admin-heading"><div><p class="eyebrow">KATALOG GALIPAT STORY</p><h1>Kelola koleksi.</h1><p id="stats"></p></div><div class="admin-actions"><button id="btn-analytics" type="button" class="button btn-analytics-toggle">📊 Lihat Statistik &amp; Analitik</button> <button id="new" class="button">+ Tambah tema</button> <button id="new-cat-btn" class="button outline">+ Tambah kategori</button> <button id="logout" class="button outline">Keluar</button></div></div>
+
+<!-- ANALYTICS DASHBOARD PANEL -->
+<section id="analytics-panel" class="analytics-panel" hidden>
+  <div class="analytics-header">
+    <div>
+      <p class="eyebrow">LAPORAN TRAFIK &amp; KONVERSI WHATSAPP</p>
+      <h2>Statistik Pengunjung &amp; Klik Tombol WA</h2>
+      <p class="quiet">Pengunjung unik dihitung <strong>1 kali per 30 hari (1 bulan)</strong> untuk setiap perangkat/browser—tidak terhitung berulang walaupun user me-refresh atau membuka web berkali-kali dalam sebulan.</p>
+    </div>
+    <div class="analytics-header-actions">
+      <button type="button" id="refresh-analytics" class="button outline small">🔄 Muat Ulang Data</button>
+      <button type="button" id="reset-analytics" class="button outline small danger-btn">Reset Data</button>
+      <button type="button" id="close-analytics" class="button outline small">Tutup ×</button>
+    </div>
+  </div>
+
+  <!-- Side-by-Side 3 Pages Comparison Table -->
+  <div class="analytics-subcard">
+    <div class="subcard-title-row">
+      <h3>📌 Ringkasan Terpisah 3 Halaman Website</h3>
+      <span class="subcard-hint">Klik salah satu halaman di bawah untuk melihat rincian tombol WA &amp; tema pada halaman tersebut</span>
+    </div>
+    <div class="analytics-table-wrap">
+      <table class="analytics-comp-table">
+        <thead>
+          <tr>
+            <th>Halaman Website</th>
+            <th>Pengunjung Unik (1 Bulan)</th>
+            <th>Unik Hari Ini</th>
+            <th>Unik 7 Hari</th>
+            <th>Total Buka (Termasuk Refresh)</th>
+            <th>Orang Klik WA</th>
+            <th>Total Klik WA</th>
+            <th>Konversi WA</th>
+          </tr>
+        </thead>
+        <tbody id="analytics-pages-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Page Filter Tabs -->
+  <div class="analytics-tabs-bar" role="tablist" aria-label="Pilih halaman untuk rincian analitik">
+    <button type="button" class="analytics-tab active" data-page="all">🌐 Semua Halaman (Gabungan)</button>
+    <button type="button" class="analytics-tab" data-page="home">🏠 Halaman Utama (/)</button>
+    <button type="button" class="analytics-tab" data-page="web">💌 Web Invitation (/web-invitation)</button>
+    <button type="button" class="analytics-tab" data-page="tema">🎨 Katalog Tema (/tema)</button>
+  </div>
+
+  <div class="analytics-current-banner">
+    <span>Menampilkan rincian data untuk: <strong id="analytics-active-page-label">Semua Halaman (Gabungan)</strong></span>
+    <small id="analytics-updated-at"></small>
+  </div>
+
+  <!-- 4 KPI Cards for Selected Page -->
+  <div class="analytics-kpi-grid">
+    <article class="kpi-card kpi-primary">
+      <span class="kpi-tag">UTAMA · ANTI-REFRESH 30 HARI</span>
+      <strong class="kpi-value" id="kpi-unique-monthly">0</strong>
+      <h4 class="kpi-label">Pengunjung Unik (1 Bulan)</h4>
+      <p class="kpi-note">Jika user yang sama refresh atau buka lagi dalam 30 hari, tetap dihitung 1 orang.</p>
+    </article>
+    <article class="kpi-card">
+      <span class="kpi-tag">REKOMENDASI HARIAN &amp; MINGGUAN</span>
+      <strong class="kpi-value" id="kpi-unique-today">0</strong>
+      <h4 class="kpi-label">Pengunjung Unik Hari Ini</h4>
+      <p class="kpi-note" id="kpi-unique-7d">7 hari terakhir: 0 orang unik</p>
+    </article>
+    <article class="kpi-card">
+      <span class="kpi-tag">AKTIVITAS BUKA / REFRESH</span>
+      <strong class="kpi-value" id="kpi-total-views">0</strong>
+      <h4 class="kpi-label">Total Halaman Dibuka</h4>
+      <p class="kpi-note" id="kpi-views-today">Hari ini: 0x dibuka (termasuk refresh)</p>
+    </article>
+    <article class="kpi-card kpi-wa">
+      <span class="kpi-tag">KONVERSI WHATSAPP</span>
+      <strong class="kpi-value" id="kpi-wa-clicks">0</strong>
+      <h4 class="kpi-label">Total Klik Tombol WA</h4>
+      <p class="kpi-note" id="kpi-wa-conversion">0 orang unik · Konversi 0%</p>
+    </article>
+  </div>
+
+  <!-- Two Columns: WA Clicks by Button Location & Daily 7-Day Trend -->
+  <div class="analytics-two-col">
+    <div class="analytics-subcard">
+      <div class="subcard-title-row">
+        <h3>🔘 Klik Tombol WA Berdasarkan Posisi Tombol</h3>
+        <small>Melihat tombol mana yang paling sering diklik pengunjung pada halaman ini</small>
+      </div>
+      <div class="analytics-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Posisi / Nama Tombol WA</th>
+              <th>Orang Unik</th>
+              <th>Total Klik</th>
+              <th>Porsi</th>
+            </tr>
+          </thead>
+          <tbody id="analytics-location-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="analytics-subcard">
+      <div class="subcard-title-row">
+        <h3>📅 Tren 7 Hari Terakhir (Halaman Ini)</h3>
+        <small>Perbandingan pengunjung unik harian vs jumlah klik WhatsApp</small>
+      </div>
+      <div class="analytics-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal (WIB)</th>
+              <th>Pengunjung Unik</th>
+              <th>Total Buka</th>
+              <th>Klik WA</th>
+            </tr>
+          </thead>
+          <tbody id="analytics-daily-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme & Add-on Clicks Breakdown -->
+  <div class="analytics-subcard">
+    <div class="subcard-title-row">
+      <div>
+        <h3>🏆 Rincian Tema &amp; Add-on yang Dihubungi via WhatsApp</h3>
+        <small>Daftar tema, add-on, atau konsultasi yang diklik pengunjung pada halaman yang dipilih</small>
+      </div>
+      <input type="search" id="analytics-theme-search" class="analytics-search-input" placeholder="Cari kode tema / add-on…">
+    </div>
+    <div class="analytics-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama Tema / Add-on</th>
+            <th>Kategori</th>
+            <th>Dari Kartu Katalog</th>
+            <th>Dari Pop-up Preview</th>
+            <th>Dari Tombol Lain</th>
+            <th>Orang Unik</th>
+            <th>Total Klik WA</th>
+            <th>Terakhir Diklik</th>
+          </tr>
+        </thead>
+        <tbody id="analytics-theme-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Clicks Real-Time Activity Log -->
+  <div class="analytics-subcard">
+    <div class="subcard-title-row">
+      <h3>🕒 Riwayat Klik WhatsApp Terbaru</h3>
+      <small>50 aktivitas klik tombol WhatsApp terakhir secara berurutan</small>
+    </div>
+    <div class="analytics-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>Halaman</th>
+            <th>Tombol yang Diklik</th>
+            <th>Tema / Add-on yang Diminati</th>
+          </tr>
+        </thead>
+        <tbody id="analytics-recent-rows"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="admin-toolbar"><label class="admin-search-label">Cari nama atau kategori<input id="admin-search" placeholder="Cari tema…" type="search"></label><label class="admin-check-label"><input type="checkbox" id="filter-bestseller-only"> ⭐ Hanya Bestseller</label></div><div class="admin-table"><table><thead><tr><th>Tema</th><th>Kategori</th><th>Harga</th><th>Bestseller</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="rows"></tbody></table></div><button id="load-more" class="button outline">Tampilkan lainnya</button><div class="settings-card"><div class="settings-card-header"><p class="eyebrow">PENGATURAN TAMPILAN</p><h2>Mode Pratinjau Tema (Lihat Contoh)</h2><p class="quiet">Tentukan cara website menampilkan contoh undangan saat calon pengantin menekan tombol <strong>Lihat contoh</strong> atau memilih versi <strong>Dengan Foto / Tanpa Foto</strong>.</p></div><form id="settings-form"><div class="settings-options"><label class="settings-radio"><input type="radio" name="previewMode" value="new_tab"><div class="settings-radio-text"><div class="settings-title-row"><strong>Buka Langsung di Tab Baru</strong><span class="settings-badge-rec">Rekomendasi</span></div><small>Setelah calon pengantin memilih Dengan Foto / Tanpa Foto, undangan langsung terbuka utuh di tab browser baru calon pengantin tanpa batasan frame.</small></div></label><label class="settings-radio"><input type="radio" name="previewMode" value="modal"><div class="settings-radio-text"><div class="settings-title-row"><strong>Buka di Pop-up HP (Modal)</strong></div><small>Undangan dimuat di dalam bingkai simulasi HP di halaman website yang sama.</small></div></label></div><div class="settings-btn-row"><button type="submit" id="save-settings-btn" class="button">Simpan pengaturan pratinjau</button><span id="settings-save-notice" class="settings-save-notice" role="status"></span></div></form></div><details class="password-box"><summary>Ganti kata sandi admin</summary><form id="password-form"><label>Kata sandi saat ini<input name="current" type="password" autocomplete="current-password" required></label><label>Kata sandi baru (minimal 12 karakter)<input name="password" type="password" autocomplete="new-password" minlength="12" required></label><button class="button">Simpan kata sandi baru</button></form></details></section></main><dialog id="editor"><form id="theme-form"><div class="editor-heading"><h2 id="editor-title">Tambah tema</h2><button type="button" id="close" class="button outline small">Tutup ×</button></div><input name="id" type="hidden"><div class="form-grid"><label>Nama / kode tema<input name="name" required maxlength="120" placeholder="Contoh: TE#64"></label><label>Kategori<div class="category-select-row"><select name="category" id="theme-category-select" required></select><button type="button" id="btn-quick-cat" class="button outline small">+ Kategori Baru</button></div></label><label>Harga tanpa foto (Rp)<input name="price" type="number" min="0" step="1" required></label><label>Harga dengan foto (Rp)<input name="photoPrice" type="number" min="0" step="1" required></label></div><label>Link contoh utama / tanpa foto (HTTPS)<input name="demo" type="url" required placeholder="https://…"></label><label>Link contoh dengan foto (opsional, HTTPS)<input name="demoPhoto" type="url" placeholder="https://…"></label><p class="quiet">Isi kedua link jika tema memiliki versi tanpa foto dan dengan foto. Kosongkan link dengan foto bila hanya tersedia satu contoh.</p><label>Gambar preview (URL HTTPS atau lokasi aset)<input name="image" required placeholder="/assets/images/…"></label><label>Atau unggah gambar · WebP / JPG / PNG · maks. 3 MB<input id="upload" type="file" accept="image/webp,image/png,image/jpeg"></label><img id="image-preview" alt="Preview tema" hidden><label>Catatan ketentuan desain<textarea name="note" rows="2" maxlength="500"></textarea></label><div class="checks"><label><input name="active" type="checkbox" checked> Tampilkan di website</label><label><input name="bestseller" type="checkbox"> ⭐ Tema Bestseller</label><label><input name="featured" type="checkbox"> Prioritaskan di katalog</label></div><p id="editor-message" role="status"></p><button id="save" class="button">Simpan tema</button></form></dialog><dialog id="category-dialog"><div class="editor-heading"><h2 id="cat-editor-title">Kelola Kategori</h2><button type="button" id="cat-close" class="button outline small">Tutup ×</button></div><form id="category-form"><label>Nama kategori baru<input name="name" id="new-cat-name" required maxlength="60" placeholder="Contoh: Minimalis, Muslim Modern, dll."></label><label>Keterangan / catatan harga kategori (opsional)<textarea name="note" id="new-cat-note" rows="2" maxlength="300" placeholder="Contoh: Tanpa foto Rp89.000 · Dengan foto Rp119.000"></textarea></label><p class="quiet">Kategori baru akan otomatis muncul di pilihan kategori tema dan tab filter halaman utama website.</p><p id="cat-message" role="status"></p><button id="save-cat" class="button">+ Simpan Kategori Baru</button></form><div class="category-list-section"><h3>Daftar Kategori Aktif</h3><ul id="existing-cat-list" class="existing-cat-list"></ul></div></dialog></body></html>
