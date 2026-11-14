@@ -1,4 +1,4 @@
-const $=s=>document.querySelector(s);let themes=[],categories=[],settings={previewMode:'new_tab'},analyticsData=null,activeAnalyticsPage='all',limit=40;const form=$('#theme-form'),dialog=$('#editor'),catDialog=$('#category-dialog'),catForm=$('#category-form');
+const $=s=>document.querySelector(s);let themes=[],categories=[],settings={previewMode:'new_tab'},analyticsData=null,activeAnalyticsPage='all',selectedMonthKey='',limit=40;const form=$('#theme-form'),dialog=$('#editor'),catDialog=$('#category-dialog'),catForm=$('#category-form');
 async function api(url,method='GET',data){const res=await fetch(url,{method,headers:method==='GET'?{}:{'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify(data)});const json=await res.json();if(!res.ok)throw Object.assign(Error(json.error||'Permintaan gagal.'),{status:res.status});return json;}
 function notice(s){$('#notice').textContent=s}
 function fmtNum(n){return Number(n||0).toLocaleString('id-ID');}
@@ -7,24 +7,49 @@ function getCategoryNames(){const set=new Set();categories.forEach(c=>{if(c.name
 function renderCategories(preferredSelected){const sel=$('#theme-category-select');if(sel){const currentVal=preferredSelected||sel.value||'Eksklusif';sel.replaceChildren();const names=getCategoryNames();for(const name of names){const opt=document.createElement('option');opt.value=name;opt.textContent=name;sel.append(opt)}sel.value=names.includes(currentVal)?currentVal:(names[0]||'')}const listEl=$('#existing-cat-list');if(listEl){listEl.replaceChildren();const names=getCategoryNames();names.forEach(name=>{const li=document.createElement('li');const info=document.createElement('div');const span=document.createElement('span');span.textContent=name;info.append(span);const catObj=categories.find(c=>c.name===name);if(catObj?.note){const note=document.createElement('small');note.textContent=catObj.note;info.append(note)}li.append(info);const right=document.createElement('div');right.style.display='flex';right.style.alignItems='center';right.style.gap='10px';const count=themes.filter(t=>t.category===name).length;const countBadge=document.createElement('small');countBadge.textContent=`${count} tema`;countBadge.style.color='#68736b';right.append(countBadge);if(catObj){const delBtn=document.createElement('button');delBtn.type='button';delBtn.className='del-cat-btn';delBtn.textContent='Hapus ×';delBtn.title=`Hapus kategori "${name}"`;delBtn.onclick=async()=>{if(!confirm(`Hapus kategori "${name}"?`))return;try{await api(`/api/admin/categories/${encodeURIComponent(catObj.id||catObj.name)}`,'DELETE');categories=categories.filter(c=>c.name!==name&&c.id!==catObj.id);renderCategories();notice(`Kategori "${name}" berhasil dihapus.`);}catch(e){notice(e.message)}};right.append(delBtn)}li.append(right);listEl.append(li)})}}
 async function load(){try{[themes,categories,settings,analyticsData]=await Promise.all([api('/api/admin/themes'),api('/api/admin/categories').catch(()=>[]),api('/api/admin/settings').catch(()=>({previewMode:'new_tab'})),api('/api/admin/analytics').catch(()=>null)]);$('#login').hidden=true;$('#dashboard').hidden=false;renderCategories();renderSettings();renderAnalytics();render()}catch(e){$('#login').hidden=false;$('#dashboard').hidden=true;if(e.status!==401)notice(e.message)}}
 function renderSettings(){const mode=settings?.previewMode||'new_tab';const radio=$(`#settings-form input[name="previewMode"][value="${mode}"]`);if(radio)radio.checked=true;}
-function render(){const q=$('#admin-search').value.toLowerCase();const bsOnly=$('#filter-bestseller-only')?.checked;const rows=themes.filter(t=>{const matchQ=(t.name+' '+t.category).toLowerCase().includes(q);const matchBs=!bsOnly||(t.bestseller||t.featured);return matchQ&&matchBs;});const bsCount=themes.filter(t=>t.bestseller||t.featured).length;const uniq30=analyticsData?.pages?.all?.uniqueMonthly||0;const waAll=analyticsData?.pages?.all?.totalWaClicks||0;$('#stats').textContent=`${themes.length} tema · ${themes.filter(t=>t.active).length} ditampilkan · ${bsCount} bestseller · 👥 ${fmtNum(uniq30)} pengunjung unik (1 bln) · 💬 ${fmtNum(waAll)} klik WA`;$('#rows').replaceChildren();for(const t of rows.slice(0,limit)){const tr=document.createElement('tr');const name=document.createElement('td');const img=document.createElement('img');img.src=t.image;img.alt='';img.loading='lazy';name.append(img,document.createTextNode(t.name));tr.append(name);for(const value of [t.category,'Rp'+t.price.toLocaleString('id-ID')]){const td=document.createElement('td');td.textContent=value;tr.append(td)}const tdBestseller=document.createElement('td');const bsBtn=document.createElement('button');const isBs=!!(t.bestseller||t.featured);bsBtn.className='badge-bs '+(isBs?'':'off');bsBtn.textContent=isBs?'⭐ Bestseller':'☆ Bukan';bsBtn.title='Klik untuk ubah status Bestseller';bsBtn.onclick=async()=>{try{const res=await api(`/api/admin/themes/${encodeURIComponent(t.id)}/toggle-bestseller`,'POST');t.bestseller=res.bestseller;render()}catch(e){notice(e.message)}};tdBestseller.append(bsBtn);tr.append(tdBestseller);const tdStatus=document.createElement('td');tdStatus.textContent=t.active?'Aktif':'Tersembunyi';tr.append(tdStatus);const td=document.createElement('td');const b=document.createElement('button');b.className='button outline small';b.textContent='Edit';b.setAttribute('aria-label','Edit '+t.name);b.onclick=()=>edit(t);td.append(b);tr.append(td);$('#rows').append(tr)}$('#load-more').hidden=rows.length<=limit;}
+function getActiveMonthData(){if(!analyticsData)return null;if(!selectedMonthKey&&analyticsData.currentMonth)selectedMonthKey=analyticsData.currentMonth;return analyticsData.months?.[selectedMonthKey]||{label:'Bulan Ini',isCurrent:true,pages:analyticsData.pages||{}};}
+function render(){const q=$('#admin-search').value.toLowerCase();const bsOnly=$('#filter-bestseller-only')?.checked;const rows=themes.filter(t=>{const matchQ=(t.name+' '+t.category).toLowerCase().includes(q);const matchBs=!bsOnly||(t.bestseller||t.featured);return matchQ&&matchBs;});const bsCount=themes.filter(t=>t.bestseller||t.featured).length;const monthData=getActiveMonthData();const uniqM=monthData?.pages?.all?.uniqueMonthly||0;const waAll=monthData?.pages?.all?.totalWaClicks||0;$('#stats').textContent=`${themes.length} tema · ${themes.filter(t=>t.active).length} ditampilkan · ${bsCount} bestseller · 👥 ${fmtNum(uniqM)} unik (${monthData?.label||'1 bln'}) · 💬 ${fmtNum(waAll)} klik WA`;$('#rows').replaceChildren();for(const t of rows.slice(0,limit)){const tr=document.createElement('tr');const name=document.createElement('td');const img=document.createElement('img');img.src=t.image;img.alt='';img.loading='lazy';name.append(img,document.createTextNode(t.name));tr.append(name);for(const value of [t.category,'Rp'+t.price.toLocaleString('id-ID')]){const td=document.createElement('td');td.textContent=value;tr.append(td)}const tdBestseller=document.createElement('td');const bsBtn=document.createElement('button');const isBs=!!(t.bestseller||t.featured);bsBtn.className='badge-bs '+(isBs?'':'off');bsBtn.textContent=isBs?'⭐ Bestseller':'☆ Bukan';bsBtn.title='Klik untuk ubah status Bestseller';bsBtn.onclick=async()=>{try{const res=await api(`/api/admin/themes/${encodeURIComponent(t.id)}/toggle-bestseller`,'POST');t.bestseller=res.bestseller;render()}catch(e){notice(e.message)}};tdBestseller.append(bsBtn);tr.append(tdBestseller);const tdStatus=document.createElement('td');tdStatus.textContent=t.active?'Aktif':'Tersembunyi';tr.append(tdStatus);const td=document.createElement('td');const b=document.createElement('button');b.className='button outline small';b.textContent='Edit';b.setAttribute('aria-label','Edit '+t.name);b.onclick=()=>edit(t);td.append(b);tr.append(td);$('#rows').append(tr)}$('#load-more').hidden=rows.length<=limit;}
 
 function renderAnalytics(){
-  if(!analyticsData||!analyticsData.pages)return;
-  const pages=analyticsData.pages;
+  if(!analyticsData)return;
+  const monthData=getActiveMonthData();
+  if(!monthData||!monthData.pages)return;
+  const pages=monthData.pages;
   const current=pages[activeAnalyticsPage]||pages.all;
+  const isCurrent=!!monthData.isCurrent;
 
-  // Update active tab buttons
+  const monthPills=$('#analytics-month-pills');
+  if(monthPills&&analyticsData.availableMonths){
+    monthPills.replaceChildren();
+    for(const m of analyticsData.availableMonths){
+      const btn=document.createElement('button');
+      btn.type='button';
+      btn.className='month-pill-btn'+(m.key===selectedMonthKey?' active':'');
+      const dot=document.createElement('span');
+      dot.className='month-dot';
+      const lbl=document.createElement('span');
+      lbl.textContent=m.label;
+      btn.append(dot,lbl);
+      btn.onclick=()=>{
+        selectedMonthKey=m.key;
+        renderAnalytics();
+        render();
+      };
+      monthPills.append(btn);
+    }
+  }
+
+  if($('#analytics-month-title'))$('#analytics-month-title').textContent=monthData.label;
+  if($('#analytics-active-month-label'))$('#analytics-active-month-label').textContent=monthData.label;
+  if($('#analytics-comp-month-badge'))$('#analytics-comp-month-badge').textContent=monthData.label;
+  if($('#analytics-active-page-label'))$('#analytics-active-page-label').textContent=current.label;
+  if($('#analytics-updated-at'))$('#analytics-updated-at').textContent='Diperbarui: '+fmtTime(analyticsData.updatedAt);
+  if($('#analytics-daily-sub'))$('#analytics-daily-sub').textContent=`Rincian tanggal 1 s/d ${current.daysInPeriod||30} pada ${monthData.label}`;
+
   document.querySelectorAll('.analytics-tab').forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.page===activeAnalyticsPage);
   });
 
-  const activeLabel=$('#analytics-active-page-label');
-  if(activeLabel)activeLabel.textContent=current.label;
-  const updatedEl=$('#analytics-updated-at');
-  if(updatedEl)updatedEl.textContent='Diperbarui: '+fmtTime(analyticsData.updatedAt);
-
-  // Render 3-page comparison table (+ combined row)
   const compBody=$('#analytics-pages-rows');
   if(compBody){
     compBody.replaceChildren();
@@ -56,11 +81,11 @@ function renderAnalytics(){
       pillM.textContent=`${fmtNum(pData.uniqueMonthly)} orang`;
       tdMonthly.append(pillM);
 
-      const tdToday=document.createElement('td');
-      tdToday.textContent=`${fmtNum(pData.uniqueToday)} orang`;
+      const tdAvg=document.createElement('td');
+      tdAvg.textContent=`${fmtNum(pData.avgDailyVisitors)} orang`;
 
-      const td7d=document.createElement('td');
-      td7d.textContent=`${fmtNum(pData.unique7d)} orang`;
+      const tdToday=document.createElement('td');
+      tdToday.textContent=isCurrent?`${fmtNum(pData.uniqueToday)} orang`:'—';
 
       const tdViews=document.createElement('td');
       tdViews.textContent=`${fmtNum(pData.totalPageviews)}x dibuka`;
@@ -77,21 +102,25 @@ function renderAnalytics(){
       const tdConv=document.createElement('td');
       tdConv.textContent=`${pData.conversionRate}%`;
 
-      tr.append(tdName,tdMonthly,tdToday,td7d,tdViews,tdWaUniq,tdWaTotal,tdConv);
+      tr.append(tdName,tdMonthly,tdAvg,tdToday,tdViews,tdWaUniq,tdWaTotal,tdConv);
       compBody.append(tr);
     }
   }
 
-  // Update 4 KPI Cards for selected page
   $('#kpi-unique-monthly').textContent=fmtNum(current.uniqueMonthly);
-  $('#kpi-unique-today').textContent=fmtNum(current.uniqueToday);
-  $('#kpi-unique-7d').textContent=`7 hari terakhir: ${fmtNum(current.unique7d)} orang unik`;
-  $('#kpi-total-views').textContent=fmtNum(current.totalPageviews);
-  $('#kpi-views-today').textContent=`Hari ini: ${fmtNum(current.viewsToday)}x dibuka (termasuk refresh)`;
-  $('#kpi-wa-clicks').textContent=fmtNum(current.totalWaClicks);
-  $('#kpi-wa-conversion').textContent=`${fmtNum(current.uniqueWaClickers)} orang unik klik WA · Konversi ${current.conversionRate}%`;
+  if($('#kpi-unique-monthly-label'))$('#kpi-unique-monthly-label').textContent=isCurrent?'Pengunjung Unik Bulan Ini':'Pengunjung Unik Bulan Lalu';
+  if($('#kpi-unique-monthly-note'))$('#kpi-unique-monthly-note').textContent=isCurrent?'Jika user refresh atau buka lagi di bulan ini, tetap dihitung 1 orang.':'Total pengunjung unik terdeduplikasi pada bulan lalu.';
 
-  // Render WA Clicks by Location Table
+  $('#kpi-unique-today').textContent=isCurrent?fmtNum(current.uniqueToday):fmtNum(current.avgDailyVisitors);
+  if($('#kpi-unique-today-label'))$('#kpi-unique-today-label').textContent=isCurrent?'Pengunjung Unik Hari Ini':'Rata-rata Pengunjung / Hari';
+  if($('#kpi-unique-avg'))$('#kpi-unique-avg').textContent=isCurrent?(`Rata-rata: ${fmtNum(current.avgDailyVisitors)} orang unik / hari`):(`Periode: ${current.daysInPeriod} hari penuh`);
+
+  $('#kpi-total-views').textContent=fmtNum(current.totalPageviews);
+  if($('#kpi-views-today'))$('#kpi-views-today').textContent=isCurrent?(`Hari ini: ${fmtNum(current.viewsToday)}x dibuka (termasuk refresh)`):'Total buka & refresh selama sebulan';
+
+  $('#kpi-wa-clicks').textContent=fmtNum(current.totalWaClicks);
+  if($('#kpi-wa-conversion'))$('#kpi-wa-conversion').textContent=`${fmtNum(current.uniqueWaClickers)} orang unik klik WA · Konversi ${current.conversionRate}%`;
+
   const locBody=$('#analytics-location-rows');
   if(locBody){
     locBody.replaceChildren();
@@ -101,7 +130,7 @@ function renderAnalytics(){
       const td=document.createElement('td');
       td.colSpan=4;
       td.style.color='#68736b';
-      td.textContent='Belum ada klik tombol WhatsApp pada halaman ini.';
+      td.textContent='Belum ada klik tombol WhatsApp pada halaman & periode ini.';
       tr.append(td);
       locBody.append(tr);
     }else{
@@ -143,30 +172,39 @@ function renderAnalytics(){
     }
   }
 
-  // Render 7-Day Daily Trend Table
   const dailyBody=$('#analytics-daily-rows');
   if(dailyBody){
     dailyBody.replaceChildren();
-    const days=[...(current.dailyTrend||[])].reverse();
-    for(const d of days){
+    const days=current.dailyTrend||[];
+    if(!days.length){
       const tr=document.createElement('tr');
-      const tdDate=document.createElement('td');
-      tdDate.textContent=d.date;
-      const tdUniq=document.createElement('td');
-      tdUniq.textContent=`${fmtNum(d.uniqueVisitors)} orang`;
-      const tdViews=document.createElement('td');
-      tdViews.textContent=`${fmtNum(d.views)}x`;
-      const tdWa=document.createElement('td');
-      tdWa.textContent=`${fmtNum(d.waClicks)} klik`;
-      tr.append(tdDate,tdUniq,tdViews,tdWa);
+      const td=document.createElement('td');
+      td.colSpan=5;
+      td.style.color='#68736b';
+      td.textContent='Belum ada catatan harian untuk bulan ini.';
+      tr.append(td);
       dailyBody.append(tr);
+    }else{
+      for(const d of days){
+        const tr=document.createElement('tr');
+        const tdDate=document.createElement('td');
+        tdDate.textContent=d.date;
+        const tdUniq=document.createElement('td');
+        tdUniq.textContent=`${fmtNum(d.uniqueVisitors)} orang`;
+        const tdViews=document.createElement('td');
+        tdViews.textContent=`${fmtNum(d.views)}x`;
+        const tdWa=document.createElement('td');
+        tdWa.textContent=`${fmtNum(d.waClicks)} klik`;
+        const tdConv=document.createElement('td');
+        tdConv.textContent=`${d.conversionRate}%`;
+        tr.append(tdDate,tdUniq,tdViews,tdWa,tdConv);
+        dailyBody.append(tr);
+      }
     }
   }
 
-  // Render Theme & Add-on Clicks Table
   renderAnalyticsThemes();
 
-  // Render Recent Clicks Table
   const recentBody=$('#analytics-recent-rows');
   if(recentBody){
     recentBody.replaceChildren();
@@ -176,7 +214,7 @@ function renderAnalytics(){
       const td=document.createElement('td');
       td.colSpan=4;
       td.style.color='#68736b';
-      td.textContent='Belum ada riwayat aktivitas klik WhatsApp.';
+      td.textContent='Belum ada riwayat aktivitas klik WhatsApp pada periode ini.';
       tr.append(td);
       recentBody.append(tr);
     }else{
@@ -204,8 +242,10 @@ function renderAnalytics(){
 
 function renderAnalyticsThemes(){
   const themeBody=$('#analytics-theme-rows');
-  if(!themeBody||!analyticsData?.pages)return;
-  const current=analyticsData.pages[activeAnalyticsPage]||analyticsData.pages.all;
+  if(!themeBody||!analyticsData)return;
+  const monthData=getActiveMonthData();
+  if(!monthData||!monthData.pages)return;
+  const current=monthData.pages[activeAnalyticsPage]||monthData.pages.all;
   const q=($('#analytics-theme-search')?.value||'').trim().toLowerCase();
   const list=(current.themes||[]).filter(item=>!q||(item.name+' '+item.category).toLowerCase().includes(q));
   themeBody.replaceChildren();
@@ -214,7 +254,7 @@ function renderAnalyticsThemes(){
     const td=document.createElement('td');
     td.colSpan=8;
     td.style.color='#68736b';
-    td.textContent=q?'Tidak ada tema/add-on yang cocok dengan pencarian.':'Belum ada tema atau add-on yang diklik pada halaman ini.';
+    td.textContent=q?'Tidak ada tema/add-on yang cocok dengan pencarian.':'Belum ada tema atau add-on yang diklik pada halaman & periode ini.';
     tr.append(td);
     themeBody.append(tr);
     return;

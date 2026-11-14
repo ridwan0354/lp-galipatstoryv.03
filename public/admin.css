@@ -45,6 +45,18 @@
 .analytics-header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .danger-btn{color:#b91c1c;border-color:#fca5a5}
 .danger-btn:hover{background:#fef2f2}
+.analytics-month-bar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:#edf3ea;border:1.5px solid #c7d6c2;border-radius:12px;padding:14px 18px;margin-bottom:18px}
+.analytics-month-info{display:flex;flex-direction:column;gap:2px}
+.month-label-eyebrow{font-size:10px;font-weight:700;letter-spacing:1px;color:#4f6456}
+.analytics-month-info strong{font-size:16px;color:#18362b}
+.month-retention-text{font-size:11.5px;color:#5a6e61;margin-top:2px}
+.analytics-month-pills{display:flex;gap:8px;flex-wrap:wrap}
+.month-pill-btn{border:1px solid #bfd2b9;background:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;color:#2c4b3d;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .15s}
+.month-pill-btn:hover{background:#f6faf4;border-color:#1f4438}
+.month-pill-btn.active{background:#1f4438;border-color:#1f4438;color:#fff;box-shadow:0 2px 8px rgba(31,68,56,.25)}
+.month-dot{width:8px;height:8px;border-radius:50%;background:#8ea89a}
+.month-pill-btn.active .month-dot{background:#4ade80}
+.analytics-daily-table{max-height:360px}
 .analytics-tabs-bar{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 14px;padding:6px;background:#e9efe4;border-radius:12px}
 .analytics-tab{flex:1;min-width:170px;border:0;background:transparent;padding:11px 14px;border-radius:9px;font-size:13px;font-weight:600;color:#3d4d43;cursor:pointer;transition:all .15s;text-align:center}
 .analytics-tab:hover{background:rgba(255,255,255,.6);color:var(--ink)}

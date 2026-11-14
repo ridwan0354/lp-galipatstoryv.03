@@ -1,8 +1,4 @@
-import fs from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-
-export const WINDOW_30D_MS = 30 * 24 * 60 * 60 * 1000; // 30 hari (1 bulan)
-export const WINDOW_7D_MS = 7 * 24 * 60 * 60 * 1000;   // 7 hari
 
 export const PAGE_KEYS = ['home', 'web', 'tema'];
 
@@ -12,6 +8,11 @@ export const PAGE_LABELS = {
   web: 'Web Invitation (/web-invitation)',
   tema: 'Katalog Tema (/tema)'
 };
+
+export const INDO_MONTHS = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
 
 export const LOCATION_LABELS = {
   'theme-card': 'Kartu Tema di Katalog ("Pilih tema ini")',
@@ -31,7 +32,32 @@ export const LOCATION_LABELS = {
   'other': 'Tombol WhatsApp Lainnya'
 };
 
-function createEmptyBucket() {
+export function jktDate(ts = Date.now()) {
+  return new Date(ts + 7 * 3600000).toISOString().slice(0, 10);
+}
+
+export function jktMonth(ts = Date.now()) {
+  return new Date(ts + 7 * 3600000).toISOString().slice(0, 7);
+}
+
+export function getPrevMonthKey(monthKey) {
+  const [y, m] = monthKey.split('-').map(Number);
+  if (m === 1) return `${y - 1}-12`;
+  return `${y}-${String(m - 1).padStart(2, '0')}`;
+}
+
+export function formatMonthLabel(monthKey, isCurrent = false) {
+  const [y, m] = monthKey.split('-').map(Number);
+  const mName = INDO_MONTHS[(m || 1) - 1] || monthKey;
+  const prefix = isCurrent ? 'Bulan Ini' : 'Bulan Lalu';
+  return `${prefix} (${mName} ${y})`;
+}
+
+export function getDaysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+
+export function emptyBucket() {
   return {
     uniqueMonthlyTotal: 0,
     totalPageviews: 0,
@@ -45,156 +71,178 @@ function createEmptyBucket() {
   };
 }
 
-export function createEmptyAnalyticsState() {
+export function createEmptyMonthState() {
   return {
-    version: 1,
-    updatedAt: Date.now(),
-    pages: {
-      all: createEmptyBucket(),
-      home: createEmptyBucket(),
-      web: createEmptyBucket(),
-      tema: createEmptyBucket()
+    all: emptyBucket(),
+    home: emptyBucket(),
+    web: emptyBucket(),
+    tema: emptyBucket()
+  };
+}
+
+export function createEmptyAnalyticsState(now = Date.now()) {
+  const curr = jktMonth(now);
+  const prev = getPrevMonthKey(curr);
+  return {
+    version: 2,
+    updatedAt: now,
+    months: {
+      [curr]: createEmptyMonthState(),
+      [prev]: createEmptyMonthState()
     },
     recentClicks: []
   };
 }
 
-export function normalizePageKey(rawPage) {
-  const s = String(rawPage || '').trim().toLowerCase();
-  if (s === 'web' || s === 'web-invitation' || s === '/web-invitation' || s === '/web-invitation/') return 'web';
+export function purgeOldMonths(state, now = Date.now()) {
+  const curr = jktMonth(now);
+  const prev = getPrevMonthKey(curr);
+  if (state.months) {
+    for (const k of Object.keys(state.months)) {
+      if (k !== curr && k !== prev) {
+        delete state.months[k];
+      }
+    }
+  }
+  if (Array.isArray(state.recentClicks)) {
+    state.recentClicks = state.recentClicks.filter(c => {
+      const m = c.month || (c.timestamp ? jktMonth(c.timestamp) : '');
+      return m === curr || m === prev;
+    }).slice(0, 100);
+  }
+}
+
+export function ensureMonth(state, monthKey) {
+  state.months = state.months && typeof state.months === 'object' ? state.months : {};
+  if (!state.months[monthKey]) {
+    state.months[monthKey] = createEmptyMonthState();
+  }
+  return state.months[monthKey];
+}
+
+export function ensureBucket(b) {
+  if (!b || typeof b !== 'object') return emptyBucket();
+  return {
+    uniqueMonthlyTotal: Number(b.uniqueMonthlyTotal) || 0,
+    totalPageviews: Number(b.totalPageviews) || 0,
+    totalWaClicks: Number(b.totalWaClicks) || 0,
+    uniqueWaClickersTotal: Number(b.uniqueWaClickersTotal) || 0,
+    visitors: b.visitors && typeof b.visitors === 'object' ? b.visitors : {},
+    waClickVisitors: b.waClickVisitors && typeof b.waClickVisitors === 'object' ? b.waClickVisitors : {},
+    byLocation: b.byLocation && typeof b.byLocation === 'object' ? b.byLocation : {},
+    byTheme: b.byTheme && typeof b.byTheme === 'object' ? b.byTheme : {},
+    daily: b.daily && typeof b.daily === 'object' ? b.daily : {}
+  };
+}
+
+export function ensureAnalytics(raw) {
+  const now = Date.now();
+  const base = createEmptyAnalyticsState(now);
+  if (!raw || typeof raw !== 'object') return base;
+  base.updatedAt = Number(raw.updatedAt) || now;
+  base.months = base.months && typeof base.months === 'object' ? base.months : {};
+  const curr = jktMonth(base.updatedAt);
+  if (raw.pages && !raw.months) {
+    base.months[curr] = {
+      all: ensureBucket(raw.pages.all),
+      home: ensureBucket(raw.pages.home),
+      web: ensureBucket(raw.pages.web),
+      tema: ensureBucket(raw.pages.tema)
+    };
+  } else if (raw.months && typeof raw.months === 'object') {
+    for (const [mKey, mVal] of Object.entries(raw.months)) {
+      if (mVal && typeof mVal === 'object') {
+        base.months[mKey] = {
+          all: ensureBucket(mVal.all),
+          home: ensureBucket(mVal.home),
+          web: ensureBucket(mVal.web),
+          tema: ensureBucket(mVal.tema)
+        };
+      }
+    }
+  }
+  base.recentClicks = Array.isArray(raw.recentClicks) ? raw.recentClicks.slice(0, 100) : [];
+  purgeOldMonths(base, now);
+  return base;
+}
+
+export function normPage(p) {
+  const s = String(p || '').trim().toLowerCase();
+  if (s === 'web' || s.includes('web-invitation')) return 'web';
   if (s === 'tema' || s === '/tema' || s === '/tema/') return 'tema';
   return 'home';
 }
 
-export function getJakartaDateKey(ts = Date.now()) {
-  // WIB (UTC+7) YYYY-MM-DD
-  const d = new Date(ts + 7 * 3600 * 1000);
-  return d.toISOString().slice(0, 10);
+export function resolveVisitorId(vid, ip = '', ua = '', salt = 'gs') {
+  const c = String(vid || '').trim();
+  if (/^[a-zA-Z0-9_-]{8,64}$/.test(c)) return 'v_' + c;
+  return 'fp_' + createHash('sha256').update(`${ip}|${ua}|${salt}`).digest('hex').slice(0, 24);
 }
 
-export function resolveVisitorId(clientVid, ip = '', userAgent = '', salt = 'gs-analytics-v1') {
-  const cleanVid = String(clientVid || '').trim();
-  if (/^[a-zA-Z0-9_-]{8,64}$/.test(cleanVid)) {
-    return 'v_' + cleanVid;
+export function visitBucket(b, vid, now, dKey) {
+  b.totalPageviews += 1;
+  if (!b.daily[dKey]) b.daily[dKey] = { views: 0, uniqueVisitors: 0, waClicks: 0, visitors: {} };
+  const d = b.daily[dKey];
+  d.views = (Number(d.views) || 0) + 1;
+  d.visitors = d.visitors || {};
+  if (!d.visitors[vid]) {
+    d.visitors[vid] = now;
+    d.uniqueVisitors = (Number(d.uniqueVisitors) || 0) + 1;
   }
-  const raw = `${ip || 'unknown'}|${userAgent || 'unknown'}|${salt}`;
-  return 'fp_' + createHash('sha256').update(raw).digest('hex').slice(0, 24);
-}
-
-function ensureBucketStructure(bucket) {
-  if (!bucket || typeof bucket !== 'object') return createEmptyBucket();
-  bucket.uniqueMonthlyTotal = Number(bucket.uniqueMonthlyTotal) || 0;
-  bucket.totalPageviews = Number(bucket.totalPageviews) || 0;
-  bucket.totalWaClicks = Number(bucket.totalWaClicks) || 0;
-  bucket.uniqueWaClickersTotal = Number(bucket.uniqueWaClickersTotal) || 0;
-  bucket.visitors = bucket.visitors && typeof bucket.visitors === 'object' ? bucket.visitors : {};
-  bucket.waClickVisitors = bucket.waClickVisitors && typeof bucket.waClickVisitors === 'object' ? bucket.waClickVisitors : {};
-  bucket.byLocation = bucket.byLocation && typeof bucket.byLocation === 'object' ? bucket.byLocation : {};
-  bucket.byTheme = bucket.byTheme && typeof bucket.byTheme === 'object' ? bucket.byTheme : {};
-  bucket.daily = bucket.daily && typeof bucket.daily === 'object' ? bucket.daily : {};
-  return bucket;
-}
-
-export function ensureAnalyticsState(raw) {
-  const base = createEmptyAnalyticsState();
-  if (!raw || typeof raw !== 'object') return base;
-  base.version = 1;
-  base.updatedAt = Number(raw.updatedAt) || Date.now();
-  if (raw.pages && typeof raw.pages === 'object') {
-    for (const k of ['all', ...PAGE_KEYS]) {
-      base.pages[k] = ensureBucketStructure(raw.pages[k]);
-    }
+  const ex = b.visitors[vid];
+  if (!ex) {
+    b.uniqueMonthlyTotal += 1;
+    b.visitors[vid] = { firstSeenAt: now, lastSeenAt: now, totalViews: 1 };
+    return true;
   }
-  base.recentClicks = Array.isArray(raw.recentClicks) ? raw.recentClicks.slice(0, 100) : [];
-  return base;
-}
-
-function recordVisitInBucket(bucket, visitorId, now, dateKey) {
-  bucket.totalPageviews += 1;
-
-  if (!bucket.daily[dateKey]) {
-    bucket.daily[dateKey] = { views: 0, uniqueVisitors: 0, waClicks: 0, visitors: {} };
-  }
-  const dayRec = bucket.daily[dateKey];
-  dayRec.views = (Number(dayRec.views) || 0) + 1;
-  dayRec.visitors = dayRec.visitors && typeof dayRec.visitors === 'object' ? dayRec.visitors : {};
-  if (!dayRec.visitors[visitorId]) {
-    dayRec.visitors[visitorId] = now;
-    dayRec.uniqueVisitors = (Number(dayRec.uniqueVisitors) || 0) + 1;
-  }
-
-  const existing = bucket.visitors[visitorId];
-  let isNewMonthlyUnique = false;
-  if (!existing || typeof existing.lastCountedAt !== 'number' || (now - existing.lastCountedAt) >= WINDOW_30D_MS) {
-    isNewMonthlyUnique = true;
-    bucket.uniqueMonthlyTotal += 1;
-    bucket.visitors[visitorId] = {
-      firstSeenAt: existing?.firstSeenAt || now,
-      lastCountedAt: now,
-      lastSeenAt: now,
-      totalViews: (existing?.totalViews || 0) + 1
-    };
-  } else {
-    existing.lastSeenAt = now;
-    existing.totalViews = (existing.totalViews || 0) + 1;
-  }
-
-  return isNewMonthlyUnique;
+  ex.lastSeenAt = now;
+  ex.totalViews = (ex.totalViews || 0) + 1;
+  return false;
 }
 
 export function recordVisit(state, { page, visitorId, now = Date.now() }) {
-  const pageKey = normalizePageKey(page);
-  const dateKey = getJakartaDateKey(now);
+  purgeOldMonths(state, now);
+  const curr = jktMonth(now);
+  const m = ensureMonth(state, curr);
+  const pk = normPage(page), dk = jktDate(now);
   state.updatedAt = now;
-
-  const isNewOnPage = recordVisitInBucket(state.pages[pageKey], visitorId, now, dateKey);
-  const isNewGlobal = recordVisitInBucket(state.pages.all, visitorId, now, dateKey);
-
-  return { page: pageKey, isNewOnPage, isNewGlobal };
+  const isNewOnPage = visitBucket(m[pk], visitorId, now, dk);
+  const isNewGlobal = visitBucket(m.all, visitorId, now, dk);
+  state.pages = m;
+  return { page: pk, isNewOnPage, isNewGlobal };
 }
 
-function recordWaClickInBucket(bucket, visitorId, { locationKey, themeName, categoryName, now, dateKey }) {
-  bucket.totalWaClicks += 1;
-
-  if (!bucket.daily[dateKey]) {
-    bucket.daily[dateKey] = { views: 0, uniqueVisitors: 0, waClicks: 0, visitors: {} };
+export function clickBucket(b, vid, { locKey, themeName, catName, now, dKey }) {
+  b.totalWaClicks += 1;
+  if (!b.daily[dKey]) b.daily[dKey] = { views: 0, uniqueVisitors: 0, waClicks: 0, visitors: {} };
+  b.daily[dKey].waClicks = (Number(b.daily[dKey].waClicks) || 0) + 1;
+  const lastW = b.waClickVisitors[vid];
+  if (!lastW) {
+    b.uniqueWaClickersTotal += 1;
+    b.waClickVisitors[vid] = now;
   }
-  bucket.daily[dateKey].waClicks = (Number(bucket.daily[dateKey].waClicks) || 0) + 1;
-
-  // Unique WA clicker in bucket (30-day deduplicated)
-  const lastClickAt = bucket.waClickVisitors[visitorId];
-  if (typeof lastClickAt !== 'number' || (now - lastClickAt) >= WINDOW_30D_MS) {
-    bucket.uniqueWaClickersTotal += 1;
-    bucket.waClickVisitors[visitorId] = now;
-  }
-
-  // Per Button Location
-  if (!bucket.byLocation[locationKey]) {
-    bucket.byLocation[locationKey] = {
-      location: locationKey,
-      label: LOCATION_LABELS[locationKey] || locationKey,
+  if (!b.byLocation[locKey]) {
+    b.byLocation[locKey] = {
+      location: locKey,
+      label: LOCATION_LABELS[locKey] || locKey,
       totalClicks: 0,
       uniqueClickers: 0,
       visitors: {},
       lastClickedAt: 0
     };
   }
-  const locEntry = bucket.byLocation[locationKey];
-  locEntry.totalClicks += 1;
-  locEntry.lastClickedAt = now;
-  locEntry.visitors = locEntry.visitors || {};
-  const lastLocClick = locEntry.visitors[visitorId];
-  if (typeof lastLocClick !== 'number' || (now - lastLocClick) >= WINDOW_30D_MS) {
-    locEntry.uniqueClickers += 1;
-    locEntry.visitors[visitorId] = now;
+  const lc = b.byLocation[locKey];
+  lc.totalClicks += 1;
+  lc.lastClickedAt = now;
+  lc.visitors = lc.visitors || {};
+  if (!lc.visitors[vid]) {
+    lc.uniqueClickers += 1;
+    lc.visitors[vid] = now;
   }
-
-  // Per Theme / Add-on / Consultation
-  const tKey = themeName;
-  if (!bucket.byTheme[tKey]) {
-    bucket.byTheme[tKey] = {
+  if (!b.byTheme[themeName]) {
+    b.byTheme[themeName] = {
       name: themeName,
-      category: categoryName,
+      category: catName,
       totalClicks: 0,
       uniqueClickers: 0,
       fromCard: 0,
@@ -204,186 +252,156 @@ function recordWaClickInBucket(bucket, visitorId, { locationKey, themeName, cate
       lastClickedAt: 0
     };
   }
-  const themeEntry = bucket.byTheme[tKey];
-  if (categoryName && (!themeEntry.category || themeEntry.category === 'Konsultasi')) {
-    themeEntry.category = categoryName;
-  }
-  themeEntry.totalClicks += 1;
-  themeEntry.lastClickedAt = now;
-  if (locationKey === 'theme-card') {
-    themeEntry.fromCard += 1;
-  } else if (locationKey === 'preview') {
-    themeEntry.fromPreview += 1;
-  } else {
-    themeEntry.fromOther += 1;
-  }
-  themeEntry.visitors = themeEntry.visitors || {};
-  const lastThemeClick = themeEntry.visitors[visitorId];
-  if (typeof lastThemeClick !== 'number' || (now - lastThemeClick) >= WINDOW_30D_MS) {
-    themeEntry.uniqueClickers += 1;
-    themeEntry.visitors[visitorId] = now;
+  const tc = b.byTheme[themeName];
+  if (catName && (!tc.category || tc.category === 'Konsultasi Umum')) tc.category = catName;
+  tc.totalClicks += 1;
+  tc.lastClickedAt = now;
+  if (locKey === 'theme-card') tc.fromCard += 1;
+  else if (locKey === 'preview') tc.fromPreview += 1;
+  else tc.fromOther += 1;
+  tc.visitors = tc.visitors || {};
+  if (!tc.visitors[vid]) {
+    tc.uniqueClickers += 1;
+    tc.visitors[vid] = now;
   }
 }
 
 export function recordWaClick(state, { page, visitorId, location, theme, category, now = Date.now() }) {
-  const pageKey = normalizePageKey(page);
-  const dateKey = getJakartaDateKey(now);
+  purgeOldMonths(state, now);
+  const curr = jktMonth(now);
+  const m = ensureMonth(state, curr);
+  const pk = normPage(page), dk = jktDate(now);
   state.updatedAt = now;
-
   const rawLoc = String(location || 'other').trim().toLowerCase().slice(0, 40) || 'other';
-  const locationKey = LOCATION_LABELS[rawLoc] ? rawLoc : (rawLoc.replace(/[^a-z0-9_-]/g, '') || 'other');
-
+  const locKey = LOCATION_LABELS[rawLoc] ? rawLoc : (rawLoc.replace(/[^a-z0-9_-]/g, '') || 'other');
   const rawTheme = String(theme || '').trim().slice(0, 120);
   const themeName = rawTheme || 'Konsultasi Umum (Tanpa Tema Spesifik)';
-
-  let categoryName = String(category || '').trim().slice(0, 60);
-  if (!categoryName) {
-    if (themeName.startsWith('Add-on')) categoryName = 'Add-on';
-    else if (!rawTheme) categoryName = 'Konsultasi Umum';
-    else categoryName = 'Tema Undangan';
-  }
-
-  recordWaClickInBucket(state.pages[pageKey], visitorId, {
-    locationKey,
-    themeName,
-    categoryName,
-    now,
-    dateKey
-  });
-
-  recordWaClickInBucket(state.pages.all, visitorId, {
-    locationKey,
-    themeName,
-    categoryName,
-    now,
-    dateKey
-  });
+  let catName = String(category || '').trim().slice(0, 60);
+  if (!catName) catName = themeName.startsWith('Add-on') ? 'Add-on' : (!rawTheme ? 'Konsultasi Umum' : 'Tema Undangan');
+  clickBucket(m[pk], visitorId, { locKey, themeName, catName, now, dKey: dk });
+  clickBucket(m.all, visitorId, { locKey, themeName, catName, now, dKey: dk });
+  state.pages = m;
 
   state.recentClicks.unshift({
     timestamp: now,
-    page: pageKey,
-    pageLabel: PAGE_LABELS[pageKey],
-    location: locationKey,
-    locationLabel: LOCATION_LABELS[locationKey] || locationKey,
+    month: curr,
+    page: pk,
+    pageLabel: PAGE_LABELS[pk],
+    location: locKey,
+    locationLabel: LOCATION_LABELS[locKey] || locKey,
     theme: themeName,
-    category: categoryName
+    category: catName
   });
-  if (state.recentClicks.length > 120) {
-    state.recentClicks.length = 120;
-  }
-
-  return { page: pageKey, location: locationKey, theme: themeName };
+  if (state.recentClicks.length > 100) state.recentClicks.length = 100;
+  return { page: pk, location: locKey, theme: themeName };
 }
 
-function summarizeBucket(bucket, pageKey, recentClicks, now = Date.now()) {
-  const todayKey = getJakartaDateKey(now);
-  const visitorEntries = Object.values(bucket.visitors || {});
+export function sumBucket(b, pk, recents, monthKey, isCurrent, now = Date.now()) {
+  const [y, m] = monthKey.split('-').map(Number);
+  const maxDays = getDaysInMonth(y, m);
+  const tKey = jktDate(now);
+  const uniqueMonthly = b.uniqueMonthlyTotal || Object.keys(b.visitors || {}).length || 0;
+  const uniqueWaClickers = b.uniqueWaClickersTotal || Object.keys(b.waClickVisitors || {}).length || 0;
+  const uniqueToday = isCurrent ? (Number(b.daily?.[tKey]?.uniqueVisitors) || 0) : 0;
+  const viewsToday = isCurrent ? (Number(b.daily?.[tKey]?.views) || 0) : 0;
+  const waClicksToday = isCurrent ? (Number(b.daily?.[tKey]?.waClicks) || 0) : 0;
+  const conversionRate = uniqueMonthly > 0 ? Number(((uniqueWaClickers / uniqueMonthly) * 100).toFixed(1)) : 0;
 
-  let activeUnique30d = 0;
-  let activeUnique7d = 0;
-  for (const v of visitorEntries) {
-    const lastCounted = Number(v?.lastCountedAt) || 0;
-    const lastSeen = Number(v?.lastSeenAt) || lastCounted;
-    if (now - lastCounted < WINDOW_30D_MS) activeUnique30d += 1;
-    if (now - lastSeen < WINDOW_7D_MS) activeUnique7d += 1;
-  }
+  const locations = Object.values(b.byLocation || {}).map(x => ({
+    location: x.location,
+    label: LOCATION_LABELS[x.location] || x.label || x.location,
+    totalClicks: x.totalClicks || 0,
+    uniqueClickers: x.uniqueClickers || 0,
+    lastClickedAt: x.lastClickedAt || 0
+  })).sort((a, c) => c.totalClicks - a.totalClicks);
 
-  const uniqueToday = Number(bucket.daily?.[todayKey]?.uniqueVisitors) || 0;
-  const viewsToday = Number(bucket.daily?.[todayKey]?.views) || 0;
-  const waClicksToday = Number(bucket.daily?.[todayKey]?.waClicks) || 0;
+  const themesList = Object.values(b.byTheme || {}).map(x => ({
+    name: x.name,
+    category: x.category || 'Tema Undangan',
+    totalClicks: x.totalClicks || 0,
+    uniqueClickers: x.uniqueClickers || 0,
+    fromCard: x.fromCard || 0,
+    fromPreview: x.fromPreview || 0,
+    fromOther: x.fromOther || 0,
+    lastClickedAt: x.lastClickedAt || 0
+  })).sort((a, c) => c.totalClicks - a.totalClicks);
 
-  // Unique monthly visitors (strictly deduplicated for 30 days per visitor)
-  const uniqueMonthly = Math.max(bucket.uniqueMonthlyTotal || 0, activeUnique30d);
-
-  // Conversion rate: % of unique monthly visitors who clicked WA
-  const conversionRate = uniqueMonthly > 0
-    ? Number(((bucket.uniqueWaClickersTotal / uniqueMonthly) * 100).toFixed(1))
-    : 0;
-
-  // Locations sorted by totalClicks desc
-  const locations = Object.values(bucket.byLocation || {})
-    .map(item => ({
-      location: item.location,
-      label: LOCATION_LABELS[item.location] || item.label || item.location,
-      totalClicks: item.totalClicks || 0,
-      uniqueClickers: item.uniqueClickers || 0,
-      lastClickedAt: item.lastClickedAt || 0
-    }))
-    .sort((a, b) => b.totalClicks - a.totalClicks || b.uniqueClickers - a.uniqueClickers);
-
-  // Themes / Add-ons sorted by totalClicks desc
-  const themes = Object.values(bucket.byTheme || {})
-    .map(item => ({
-      name: item.name,
-      category: item.category || 'Tema Undangan',
-      totalClicks: item.totalClicks || 0,
-      uniqueClickers: item.uniqueClickers || 0,
-      fromCard: item.fromCard || 0,
-      fromPreview: item.fromPreview || 0,
-      fromOther: item.fromOther || 0,
-      lastClickedAt: item.lastClickedAt || 0
-    }))
-    .sort((a, b) => b.totalClicks - a.totalClicks || b.uniqueClickers - a.uniqueClickers);
-
-  // Last 7 days daily breakdown
+  // Full Month Days (Reverse Chronological: from today/end of month down to day 1)
+  const currentDayNum = isCurrent ? Math.min(maxDays, new Date(now + 7 * 3600000).getDate()) : maxDays;
   const dailyTrend = [];
-  for (let i = 6; i >= 0; i--) {
-    const dKey = getJakartaDateKey(now - i * 86400 * 1000);
-    const dObj = bucket.daily?.[dKey];
+  for (let day = currentDayNum; day >= 1; day--) {
+    const dk = `${monthKey}-${String(day).padStart(2, '0')}`;
+    const d = b.daily?.[dk];
+    const uVis = Number(d?.uniqueVisitors) || 0;
+    const clicks = Number(d?.waClicks) || 0;
     dailyTrend.push({
-      date: dKey,
-      uniqueVisitors: Number(dObj?.uniqueVisitors) || 0,
-      views: Number(dObj?.views) || 0,
-      waClicks: Number(dObj?.waClicks) || 0
+      date: dk,
+      uniqueVisitors: uVis,
+      views: Number(d?.views) || 0,
+      waClicks: clicks,
+      conversionRate: uVis > 0 ? Number(((clicks / uVis) * 100).toFixed(1)) : 0
     });
   }
 
-  const filteredRecent = pageKey === 'all'
-    ? recentClicks.slice(0, 50)
-    : recentClicks.filter(c => c.page === pageKey).slice(0, 50);
+  const avgDailyVisitors = currentDayNum > 0 ? Math.round(uniqueMonthly / currentDayNum) : 0;
+  const monthRecents = recents.filter(c => (c.month || jktMonth(c.timestamp)) === monthKey);
+  const filteredRecents = pk === 'all' ? monthRecents : monthRecents.filter(c => c.page === pk);
 
   return {
-    page: pageKey,
-    label: PAGE_LABELS[pageKey] || pageKey,
+    page: pk,
+    label: PAGE_LABELS[pk] || pk,
+    monthKey,
+    isCurrent,
+    daysInPeriod: currentDayNum,
+    avgDailyVisitors,
     uniqueMonthly,
-    activeUnique30d,
-    unique7d: activeUnique7d,
     uniqueToday,
-    totalPageviews: bucket.totalPageviews || 0,
+    totalPageviews: b.totalPageviews || 0,
     viewsToday,
-    totalWaClicks: bucket.totalWaClicks || 0,
-    uniqueWaClickers: bucket.uniqueWaClickersTotal || 0,
+    totalWaClicks: b.totalWaClicks || 0,
+    uniqueWaClickers,
     waClicksToday,
     conversionRate,
     locations,
-    themes,
+    themes: themesList,
     dailyTrend,
-    recentClicks: filteredRecent
+    recentClicks: filteredRecents.slice(0, 50)
   };
 }
 
 export function buildAnalyticsSummary(state, now = Date.now()) {
-  const safe = ensureAnalyticsState(state);
-  return {
-    updatedAt: safe.updatedAt,
-    windowDays: 30,
-    pages: {
-      all: summarizeBucket(safe.pages.all, 'all', safe.recentClicks, now),
-      home: summarizeBucket(safe.pages.home, 'home', safe.recentClicks, now),
-      web: summarizeBucket(safe.pages.web, 'web', safe.recentClicks, now),
-      tema: summarizeBucket(safe.pages.tema, 'tema', safe.recentClicks, now)
-    }
-  };
-}
+  purgeOldMonths(state, now);
+  const currMonth = jktMonth(now);
+  const prevMonth = getPrevMonthKey(currMonth);
+  ensureMonth(state, currMonth);
+  ensureMonth(state, prevMonth);
 
-export async function loadAnalyticsFile(filePath) {
-  try {
-    const raw = JSON.parse(await fs.readFile(filePath, 'utf8'));
-    return ensureAnalyticsState(raw);
-  } catch (e) {
-    if (e.code !== 'ENOENT') throw e;
-    const initial = createEmptyAnalyticsState();
-    await fs.writeFile(filePath, JSON.stringify(initial, null, 2)).catch(() => {});
-    return initial;
+  const monthsSummary = {};
+  for (const mKey of [currMonth, prevMonth]) {
+    const mData = state.months[mKey];
+    const isCurr = (mKey === currMonth);
+    monthsSummary[mKey] = {
+      monthKey: mKey,
+      label: formatMonthLabel(mKey, isCurr),
+      isCurrent: isCurr,
+      pages: {
+        all: sumBucket(mData.all, 'all', state.recentClicks, mKey, isCurr, now),
+        home: sumBucket(mData.home, 'home', state.recentClicks, mKey, isCurr, now),
+        web: sumBucket(mData.web, 'web', state.recentClicks, mKey, isCurr, now),
+        tema: sumBucket(mData.tema, 'tema', state.recentClicks, mKey, isCurr, now)
+      }
+    };
   }
+
+  return {
+    updatedAt: state.updatedAt || now,
+    currentMonth: currMonth,
+    prevMonth: prevMonth,
+    availableMonths: [
+      { key: currMonth, label: formatMonthLabel(currMonth, true), isCurrent: true },
+      { key: prevMonth, label: formatMonthLabel(prevMonth, false), isCurrent: false }
+    ],
+    months: monthsSummary,
+    pages: monthsSummary[currMonth].pages
+  };
 }

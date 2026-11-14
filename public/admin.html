@@ -6,7 +6,7 @@
     <div>
       <p class="eyebrow">LAPORAN TRAFIK &amp; KONVERSI WHATSAPP</p>
       <h2>Statistik Pengunjung &amp; Klik Tombol WA</h2>
-      <p class="quiet">Pengunjung unik dihitung <strong>1 kali per 30 hari (1 bulan)</strong> untuk setiap perangkat/browser—tidak terhitung berulang walaupun user me-refresh atau membuka web berkali-kali dalam sebulan.</p>
+      <p class="quiet">Pengunjung unik dihitung <strong>1 kali per bulan</strong> untuk setiap perangkat—tidak terhitung ganda walaupun user me-refresh atau membuka web berkali-kali. Tersedia data <strong>Bulan Ini</strong> dan <strong>1 Bulan Lewat</strong> (data lebih lama dari 2 bulan otomatis dibersihkan).</p>
     </div>
     <div class="analytics-header-actions">
       <button type="button" id="refresh-analytics" class="button outline small">🔄 Muat Ulang Data</button>
@@ -15,10 +15,20 @@
     </div>
   </div>
 
+  <!-- Month Period Selector (Bulan Ini vs 1 Bulan Lewat) -->
+  <div class="analytics-month-bar">
+    <div class="analytics-month-info">
+      <span class="month-label-eyebrow">PILIH PERIODE BULAN:</span>
+      <strong id="analytics-month-title">Bulan Ini</strong>
+      <small class="month-retention-text">Maksimal riwayat 2 bulan (Bulan Ini &amp; 1 Bulan Lewat). Saat masuk bulan baru, data 2 bulan sebelumnya otomatis dibersihkan.</small>
+    </div>
+    <div class="analytics-month-pills" id="analytics-month-pills" role="radiogroup" aria-label="Pilih periode bulan"></div>
+  </div>
+
   <!-- Side-by-Side 3 Pages Comparison Table -->
   <div class="analytics-subcard">
     <div class="subcard-title-row">
-      <h3>📌 Ringkasan Terpisah 3 Halaman Website</h3>
+      <h3>📌 Ringkasan Terpisah 3 Halaman Website (<span id="analytics-comp-month-badge">Bulan Ini</span>)</h3>
       <span class="subcard-hint">Klik salah satu halaman di bawah untuk melihat rincian tombol WA &amp; tema pada halaman tersebut</span>
     </div>
     <div class="analytics-table-wrap">
@@ -26,9 +36,9 @@
         <thead>
           <tr>
             <th>Halaman Website</th>
-            <th>Pengunjung Unik (1 Bulan)</th>
+            <th>Pengunjung Unik Bulan Ini</th>
+            <th>Rata-rata / Hari</th>
             <th>Unik Hari Ini</th>
-            <th>Unik 7 Hari</th>
             <th>Total Buka (Termasuk Refresh)</th>
             <th>Orang Klik WA</th>
             <th>Total Klik WA</th>
@@ -49,23 +59,23 @@
   </div>
 
   <div class="analytics-current-banner">
-    <span>Menampilkan rincian data untuk: <strong id="analytics-active-page-label">Semua Halaman (Gabungan)</strong></span>
+    <span>Menampilkan rincian: <strong id="analytics-active-page-label">Semua Halaman (Gabungan)</strong> · Periode: <strong id="analytics-active-month-label">Bulan Ini</strong></span>
     <small id="analytics-updated-at"></small>
   </div>
 
-  <!-- 4 KPI Cards for Selected Page -->
+  <!-- 4 KPI Cards for Selected Page & Month -->
   <div class="analytics-kpi-grid">
     <article class="kpi-card kpi-primary">
-      <span class="kpi-tag">UTAMA · ANTI-REFRESH 30 HARI</span>
+      <span class="kpi-tag">ANTI-REFRESH BULANAN</span>
       <strong class="kpi-value" id="kpi-unique-monthly">0</strong>
-      <h4 class="kpi-label">Pengunjung Unik (1 Bulan)</h4>
-      <p class="kpi-note">Jika user yang sama refresh atau buka lagi dalam 30 hari, tetap dihitung 1 orang.</p>
+      <h4 class="kpi-label" id="kpi-unique-monthly-label">Pengunjung Unik Bulan Ini</h4>
+      <p class="kpi-note" id="kpi-unique-monthly-note">Jika user refresh atau buka lagi di bulan ini, tetap dihitung 1 orang.</p>
     </article>
     <article class="kpi-card">
-      <span class="kpi-tag">REKOMENDASI HARIAN &amp; MINGGUAN</span>
+      <span class="kpi-tag">HARIAN &amp; RATA-RATA</span>
       <strong class="kpi-value" id="kpi-unique-today">0</strong>
-      <h4 class="kpi-label">Pengunjung Unik Hari Ini</h4>
-      <p class="kpi-note" id="kpi-unique-7d">7 hari terakhir: 0 orang unik</p>
+      <h4 class="kpi-label" id="kpi-unique-today-label">Pengunjung Unik Hari Ini</h4>
+      <p class="kpi-note" id="kpi-unique-avg">Rata-rata: 0 orang unik / hari</p>
     </article>
     <article class="kpi-card">
       <span class="kpi-tag">AKTIVITAS BUKA / REFRESH</span>
@@ -81,12 +91,12 @@
     </article>
   </div>
 
-  <!-- Two Columns: WA Clicks by Button Location & Daily 7-Day Trend -->
+  <!-- Two Columns: WA Clicks by Button Location & Daily Month Trend -->
   <div class="analytics-two-col">
     <div class="analytics-subcard">
       <div class="subcard-title-row">
         <h3>🔘 Klik Tombol WA Berdasarkan Posisi Tombol</h3>
-        <small>Melihat tombol mana yang paling sering diklik pengunjung pada halaman ini</small>
+        <small>Melihat tombol mana yang paling sering diklik pengunjung pada halaman &amp; bulan ini</small>
       </div>
       <div class="analytics-table-wrap">
         <table>
@@ -105,23 +115,25 @@
 
     <div class="analytics-subcard">
       <div class="subcard-title-row">
-        <h3>📅 Tren 7 Hari Terakhir (Halaman Ini)</h3>
-        <small>Perbandingan pengunjung unik harian vs jumlah klik WhatsApp</small>
+        <h3>📅 Tren Harian Sepanjang Bulan (Halaman Ini)</h3>
+        <small id="analytics-daily-sub">Rincian seluruh tanggal pada bulan yang dipilih</small>
       </div>
       <div class="analytics-table-wrap">
-        <table>
+        <table class="analytics-daily-table">
           <thead>
             <tr>
               <th>Tanggal (WIB)</th>
               <th>Pengunjung Unik</th>
               <th>Total Buka</th>
               <th>Klik WA</th>
+              <th>Konversi</th>
             </tr>
           </thead>
           <tbody id="analytics-daily-rows"></tbody>
         </table>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- Theme & Add-on Clicks Breakdown -->
