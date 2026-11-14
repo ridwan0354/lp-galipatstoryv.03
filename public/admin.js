@@ -1,14 +1,15 @@
 const $=s=>document.querySelector(s);let themes=[],categories=[],settings={previewMode:'new_tab'},analyticsData=null,activeAnalyticsPage='all',selectedMonthKey='',limit=40;const form=$('#theme-form'),dialog=$('#editor'),catDialog=$('#category-dialog'),catForm=$('#category-form');
 async function api(url,method='GET',data){const res=await fetch(url,{method,headers:method==='GET'?{}:{'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify(data)});const json=await res.json();if(!res.ok)throw Object.assign(Error(json.error||'Permintaan gagal.'),{status:res.status});return json;}
-function notice(s){$('#notice').textContent=s}
+function setText(selectorOrEl,text){const el=typeof selectorOrEl==='string'?$(selectorOrEl):selectorOrEl;if(el)el.textContent=text===undefined||text===null?'':text;}
+function notice(s){setText('#notice',s);}
 function fmtNum(n){return Number(n||0).toLocaleString('id-ID');}
 function fmtTime(ts){if(!ts)return '—';try{return new Date(ts).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}catch{return '—';}}
 function getCategoryNames(){const set=new Set();categories.forEach(c=>{if(c.name)set.add(c.name)});themes.forEach(t=>{if(t.category)set.add(t.category)});return Array.from(set)}
 function renderCategories(preferredSelected){const sel=$('#theme-category-select');if(sel){const currentVal=preferredSelected||sel.value||'Eksklusif';sel.replaceChildren();const names=getCategoryNames();for(const name of names){const opt=document.createElement('option');opt.value=name;opt.textContent=name;sel.append(opt)}sel.value=names.includes(currentVal)?currentVal:(names[0]||'')}const listEl=$('#existing-cat-list');if(listEl){listEl.replaceChildren();const names=getCategoryNames();names.forEach(name=>{const li=document.createElement('li');const info=document.createElement('div');const span=document.createElement('span');span.textContent=name;info.append(span);const catObj=categories.find(c=>c.name===name);if(catObj?.note){const note=document.createElement('small');note.textContent=catObj.note;info.append(note)}li.append(info);const right=document.createElement('div');right.style.display='flex';right.style.alignItems='center';right.style.gap='10px';const count=themes.filter(t=>t.category===name).length;const countBadge=document.createElement('small');countBadge.textContent=`${count} tema`;countBadge.style.color='#68736b';right.append(countBadge);if(catObj){const delBtn=document.createElement('button');delBtn.type='button';delBtn.className='del-cat-btn';delBtn.textContent='Hapus ×';delBtn.title=`Hapus kategori "${name}"`;delBtn.onclick=async()=>{if(!confirm(`Hapus kategori "${name}"?`))return;try{await api(`/api/admin/categories/${encodeURIComponent(catObj.id||catObj.name)}`,'DELETE');categories=categories.filter(c=>c.name!==name&&c.id!==catObj.id);renderCategories();notice(`Kategori "${name}" berhasil dihapus.`);}catch(e){notice(e.message)}};right.append(delBtn)}li.append(right);listEl.append(li)})}}
-async function load(){try{[themes,categories,settings,analyticsData]=await Promise.all([api('/api/admin/themes'),api('/api/admin/categories').catch(()=>[]),api('/api/admin/settings').catch(()=>({previewMode:'new_tab'})),api('/api/admin/analytics').catch(()=>null)]);$('#login').hidden=true;$('#dashboard').hidden=false;renderCategories();renderSettings();renderAnalytics();render()}catch(e){$('#login').hidden=false;$('#dashboard').hidden=true;if(e.status!==401)notice(e.message)}}
+async function load(){try{[themes,categories,settings,analyticsData]=await Promise.all([api('/api/admin/themes'),api('/api/admin/categories').catch(()=>[]),api('/api/admin/settings').catch(()=>({previewMode:'new_tab'})),api('/api/admin/analytics').catch(()=>null)]);const loginEl=$('#login'),dashEl=$('#dashboard');if(loginEl)loginEl.hidden=true;if(dashEl)dashEl.hidden=false;renderCategories();renderSettings();renderAnalytics();render();notice('');}catch(e){const loginEl=$('#login'),dashEl=$('#dashboard');if(loginEl)loginEl.hidden=false;if(dashEl)dashEl.hidden=true;if(e.status===401){notice('');}else{console.error(e);notice(e.message||'Gagal memuat admin.');}}}
 function renderSettings(){const mode=settings?.previewMode||'new_tab';const radio=$(`#settings-form input[name="previewMode"][value="${mode}"]`);if(radio)radio.checked=true;}
 function getActiveMonthData(){if(!analyticsData)return null;if(!selectedMonthKey&&analyticsData.currentMonth)selectedMonthKey=analyticsData.currentMonth;return analyticsData.months?.[selectedMonthKey]||{label:'Bulan Ini',isCurrent:true,pages:analyticsData.pages||{}};}
-function render(){const q=$('#admin-search').value.toLowerCase();const bsOnly=$('#filter-bestseller-only')?.checked;const rows=themes.filter(t=>{const matchQ=(t.name+' '+t.category).toLowerCase().includes(q);const matchBs=!bsOnly||(t.bestseller||t.featured);return matchQ&&matchBs;});const bsCount=themes.filter(t=>t.bestseller||t.featured).length;const monthData=getActiveMonthData();const uniqM=monthData?.pages?.all?.uniqueMonthly||0;const waAll=monthData?.pages?.all?.totalWaClicks||0;$('#stats').textContent=`${themes.length} tema · ${themes.filter(t=>t.active).length} ditampilkan · ${bsCount} bestseller · 👥 ${fmtNum(uniqM)} unik (${monthData?.label||'1 bln'}) · 💬 ${fmtNum(waAll)} klik WA`;$('#rows').replaceChildren();for(const t of rows.slice(0,limit)){const tr=document.createElement('tr');const name=document.createElement('td');const img=document.createElement('img');img.src=t.image;img.alt='';img.loading='lazy';name.append(img,document.createTextNode(t.name));tr.append(name);for(const value of [t.category,'Rp'+t.price.toLocaleString('id-ID')]){const td=document.createElement('td');td.textContent=value;tr.append(td)}const tdBestseller=document.createElement('td');const bsBtn=document.createElement('button');const isBs=!!(t.bestseller||t.featured);bsBtn.className='badge-bs '+(isBs?'':'off');bsBtn.textContent=isBs?'⭐ Bestseller':'☆ Bukan';bsBtn.title='Klik untuk ubah status Bestseller';bsBtn.onclick=async()=>{try{const res=await api(`/api/admin/themes/${encodeURIComponent(t.id)}/toggle-bestseller`,'POST');t.bestseller=res.bestseller;render()}catch(e){notice(e.message)}};tdBestseller.append(bsBtn);tr.append(tdBestseller);const tdStatus=document.createElement('td');tdStatus.textContent=t.active?'Aktif':'Tersembunyi';tr.append(tdStatus);const td=document.createElement('td');const b=document.createElement('button');b.className='button outline small';b.textContent='Edit';b.setAttribute('aria-label','Edit '+t.name);b.onclick=()=>edit(t);td.append(b);tr.append(td);$('#rows').append(tr)}$('#load-more').hidden=rows.length<=limit;}
+function render(){const searchInput=$('#admin-search');const q=searchInput?searchInput.value.toLowerCase():'';const bsOnly=$('#filter-bestseller-only')?.checked;const rows=themes.filter(t=>{const matchQ=(t.name+' '+t.category).toLowerCase().includes(q);const matchBs=!bsOnly||(t.bestseller||t.featured);return matchQ&&matchBs;});const bsCount=themes.filter(t=>t.bestseller||t.featured).length;const monthData=getActiveMonthData();const uniqM=monthData?.pages?.all?.uniqueMonthly||0;const waAll=monthData?.pages?.all?.totalWaClicks||0;setText('#stats',`${themes.length} tema · ${themes.filter(t=>t.active).length} ditampilkan · ${bsCount} bestseller · 👥 ${fmtNum(uniqM)} unik (${monthData?.label||'1 bln'}) · 💬 ${fmtNum(waAll)} klik WA`);const rowsEl=$('#rows');if(rowsEl){rowsEl.replaceChildren();for(const t of rows.slice(0,limit)){const tr=document.createElement('tr');const name=document.createElement('td');const img=document.createElement('img');img.src=t.image;img.alt='';img.loading='lazy';name.append(img,document.createTextNode(t.name));tr.append(name);for(const value of [t.category,'Rp'+t.price.toLocaleString('id-ID')]){const td=document.createElement('td');td.textContent=value;tr.append(td)}const tdBestseller=document.createElement('td');const bsBtn=document.createElement('button');const isBs=!!(t.bestseller||t.featured);bsBtn.className='badge-bs '+(isBs?'':'off');bsBtn.textContent=isBs?'⭐ Bestseller':'☆ Bukan';bsBtn.title='Klik untuk ubah status Bestseller';bsBtn.onclick=async()=>{try{const res=await api(`/api/admin/themes/${encodeURIComponent(t.id)}/toggle-bestseller`,'POST');t.bestseller=res.bestseller;render()}catch(e){notice(e.message)}};tdBestseller.append(bsBtn);tr.append(tdBestseller);const tdStatus=document.createElement('td');tdStatus.textContent=t.active?'Aktif':'Tersembunyi';tr.append(tdStatus);const td=document.createElement('td');const b=document.createElement('button');b.className='button outline small';b.textContent='Edit';b.setAttribute('aria-label','Edit '+t.name);b.onclick=()=>edit(t);td.append(b);tr.append(td);rowsEl.append(tr)}}const lm=$('#load-more');if(lm)lm.hidden=rows.length<=limit;}
 
 function renderAnalytics(){
   if(!analyticsData)return;
@@ -39,12 +40,12 @@ function renderAnalytics(){
     }
   }
 
-  if($('#analytics-month-title'))$('#analytics-month-title').textContent=monthData.label;
-  if($('#analytics-active-month-label'))$('#analytics-active-month-label').textContent=monthData.label;
-  if($('#analytics-comp-month-badge'))$('#analytics-comp-month-badge').textContent=monthData.label;
-  if($('#analytics-active-page-label'))$('#analytics-active-page-label').textContent=current.label;
-  if($('#analytics-updated-at'))$('#analytics-updated-at').textContent='Diperbarui: '+fmtTime(analyticsData.updatedAt);
-  if($('#analytics-daily-sub'))$('#analytics-daily-sub').textContent=`Rincian tanggal 1 s/d ${current.daysInPeriod||30} pada ${monthData.label}`;
+  setText('#analytics-month-title',monthData.label);
+  setText('#analytics-active-month-label',monthData.label);
+  setText('#analytics-comp-month-badge',monthData.label);
+  setText('#analytics-active-page-label',current.label);
+  setText('#analytics-updated-at','Diperbarui: '+fmtTime(analyticsData.updatedAt));
+  setText('#analytics-daily-sub',`Rincian tanggal 1 s/d ${current.daysInPeriod||30} pada ${monthData.label}`);
 
   document.querySelectorAll('.analytics-tab').forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.page===activeAnalyticsPage);
@@ -107,19 +108,19 @@ function renderAnalytics(){
     }
   }
 
-  $('#kpi-unique-monthly').textContent=fmtNum(current.uniqueMonthly);
-  if($('#kpi-unique-monthly-label'))$('#kpi-unique-monthly-label').textContent=isCurrent?'Pengunjung Unik Bulan Ini':'Pengunjung Unik Bulan Lalu';
-  if($('#kpi-unique-monthly-note'))$('#kpi-unique-monthly-note').textContent=isCurrent?'Jika user refresh atau buka lagi di bulan ini, tetap dihitung 1 orang.':'Total pengunjung unik terdeduplikasi pada bulan lalu.';
+  setText('#kpi-unique-monthly',fmtNum(current.uniqueMonthly));
+  setText('#kpi-unique-monthly-label',isCurrent?'Pengunjung Unik Bulan Ini':'Pengunjung Unik Bulan Lalu');
+  setText('#kpi-unique-monthly-note',isCurrent?'Jika user refresh atau buka lagi di bulan ini, tetap dihitung 1 orang.':'Total pengunjung unik terdeduplikasi pada bulan lalu.');
 
-  $('#kpi-unique-today').textContent=isCurrent?fmtNum(current.uniqueToday):fmtNum(current.avgDailyVisitors);
-  if($('#kpi-unique-today-label'))$('#kpi-unique-today-label').textContent=isCurrent?'Pengunjung Unik Hari Ini':'Rata-rata Pengunjung / Hari';
-  if($('#kpi-unique-avg'))$('#kpi-unique-avg').textContent=isCurrent?(`Rata-rata: ${fmtNum(current.avgDailyVisitors)} orang unik / hari`):(`Periode: ${current.daysInPeriod} hari penuh`);
+  setText('#kpi-unique-today',isCurrent?fmtNum(current.uniqueToday):fmtNum(current.avgDailyVisitors));
+  setText('#kpi-unique-today-label',isCurrent?'Pengunjung Unik Hari Ini':'Rata-rata Pengunjung / Hari');
+  setText('#kpi-unique-avg',isCurrent?(`Rata-rata: ${fmtNum(current.avgDailyVisitors)} orang unik / hari`):(`Periode: ${current.daysInPeriod} hari penuh`));
 
-  $('#kpi-total-views').textContent=fmtNum(current.totalPageviews);
-  if($('#kpi-views-today'))$('#kpi-views-today').textContent=isCurrent?(`Hari ini: ${fmtNum(current.viewsToday)}x dibuka (termasuk refresh)`):'Total buka & refresh selama sebulan';
+  setText('#kpi-total-views',fmtNum(current.totalPageviews));
+  setText('#kpi-views-today',isCurrent?(`Hari ini: ${fmtNum(current.viewsToday)}x dibuka (termasuk refresh)`):'Total buka & refresh selama sebulan');
 
-  $('#kpi-wa-clicks').textContent=fmtNum(current.totalWaClicks);
-  if($('#kpi-wa-conversion'))$('#kpi-wa-conversion').textContent=`${fmtNum(current.uniqueWaClickers)} orang unik klik WA · Konversi ${current.conversionRate}%`;
+  setText('#kpi-wa-clicks',fmtNum(current.totalWaClicks));
+  setText('#kpi-wa-conversion',`${fmtNum(current.uniqueWaClickers)} orang unik klik WA · Konversi ${current.conversionRate}%`);
 
   const locBody=$('#analytics-location-rows');
   if(locBody){
@@ -305,10 +306,28 @@ async function refreshAnalyticsData(){
   }
 }
 
-function edit(t){form.reset();form.elements.id.value=t?.id||'';renderCategories(t?.category||'Eksklusif');for(const key of ['name','category','price','photoPrice','demo','demoPhoto','image','note'])form.elements[key].value=t?.[key]??(key==='category'?'Eksklusif':'');form.elements.active.checked=t?t.active:true;form.elements.bestseller.checked=!!(t?.bestseller??t?.featured);form.elements.featured.checked=!!t?.featured;$('#editor-title').textContent=t?'Edit '+t.name:'Tambah tema';$('#editor-message').textContent='';preview();dialog.showModal()}
-function preview(){const src=form.elements.image.value;$('#image-preview').hidden=!src;if(src)$('#image-preview').src=src}
-function openCategoryModal(){catForm.reset();$('#cat-message').textContent='';renderCategories();catDialog.showModal()}
-$('#login-form').onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{await api('/api/login','POST',Object.fromEntries(new FormData(e.target)));e.target.reset();notice('');await load()}catch(err){notice(err.message)}finally{b.disabled=false}};
+function edit(t){form.reset();form.elements.id.value=t?.id||'';renderCategories(t?.category||'Eksklusif');for(const key of ['name','category','price','photoPrice','demo','demoPhoto','image','note'])form.elements[key].value=t?.[key]??(key==='category'?'Eksklusif':'');form.elements.active.checked=t?t.active:true;form.elements.bestseller.checked=!!(t?.bestseller??t?.featured);form.elements.featured.checked=!!t?.featured;setText('#editor-title',t?'Edit '+t.name:'Tambah tema');setText('#editor-message','');preview();dialog.showModal()}
+function preview(){const src=form.elements.image.value;const prevEl=$('#image-preview');if(prevEl){prevEl.hidden=!src;if(src)prevEl.src=src;}}
+function openCategoryModal(){catForm.reset();setText('#cat-message','');renderCategories();catDialog.showModal()}
+const loginFormEl=$('#login-form');
+if(loginFormEl){
+  loginFormEl.onsubmit=async e=>{
+    e.preventDefault();
+    const b=e.submitter||e.target.querySelector('button');
+    if(b)b.disabled=true;
+    notice('');
+    try{
+      await api('/api/login','POST',Object.fromEntries(new FormData(e.target)));
+      e.target.reset();
+      notice('');
+      await load();
+    }catch(err){
+      notice(err.message||'Gagal masuk.');
+    }finally{
+      if(b)b.disabled=false;
+    }
+  };
+}
 $('#logout').onclick=async()=>{try{await api('/api/logout','POST',{});await load()}catch(e){notice(e.message)}};
 $('#new').onclick=()=>edit();$('#close').onclick=()=>dialog.close();$('#new-cat-btn').onclick=openCategoryModal;$('#btn-quick-cat').onclick=openCategoryModal;$('#cat-close').onclick=()=>catDialog.close();
 
