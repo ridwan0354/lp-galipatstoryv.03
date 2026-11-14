@@ -35,17 +35,38 @@ function getCurrentPageKey(){
   if(p.includes('/tema'))return 'tema';
   return 'home';
 }
+let cachedDeviceModel='';
+function getClientContext(){
+  try{
+    const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+    const screen=typeof window!=='undefined'&&window.screen?`${window.screen.width||0}x${window.screen.height||0}`:'';
+    const ref=typeof document!=='undefined'?(document.referrer||''):'';
+    const qs=typeof window!=='undefined'?(window.location.search||''):'';
+    return{tz,screen,ref,qs,deviceModel:cachedDeviceModel};
+  }catch(_){return{};}
+}
 function sendTrackEvent(payload){
   try{
-    const body=JSON.stringify({...payload,visitorId:getVisitorId(),page:getCurrentPageKey()});
-    if(payload.type==='wa_click'&&typeof navigator!=='undefined'&&typeof navigator.sendBeacon==='function'){
+    const body=JSON.stringify({...getClientContext(),...payload,visitorId:getVisitorId(),page:getCurrentPageKey()});
+    if((payload.type==='wa_click'||payload.type==='theme_preview')&&typeof navigator!=='undefined'&&typeof navigator.sendBeacon==='function'){
       const blob=new Blob([body],{type:'application/json'});
       if(navigator.sendBeacon('/api/catatan',blob))return;
     }
     fetch('/api/catatan',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
   }catch(_){}
 }
-sendTrackEvent({type:'visit'});
+(async function initVisitTracking(){
+  try{
+    if(typeof navigator!=='undefined'&&navigator.userAgentData&&typeof navigator.userAgentData.getHighEntropyValues==='function'){
+      const hints=await Promise.race([
+        navigator.userAgentData.getHighEntropyValues(['model']),
+        new Promise(r=>setTimeout(()=>r(null),150))
+      ]);
+      if(hints&&hints.model)cachedDeviceModel=String(hints.model).trim();
+    }
+  }catch(_){}
+  sendTrackEvent({type:'visit'});
+})();
 document.addEventListener('click',e=>{
   const a=e.target.closest('a.wa, a[data-location^="addon-"]');
   if(!a)return;
@@ -259,6 +280,7 @@ Promise.all([
       category=c;
       if(c==='Tema V.02')subCategory='wedding';
       limit=8;
+      sendTrackEvent({type:'category_click',category:c});
       render();
     };
     catContainer.append(b);
@@ -274,6 +296,7 @@ Promise.all([
       b.onclick=()=>{
         subCategory=sub.key;
         limit=8;
+        sendTrackEvent({type:'category_click',category:`Tema V.02 · ${sub.label}`});
         render();
       };
       subContainer.append(b);
@@ -288,6 +311,7 @@ window.selectCategory=function(catName,subKey){
   if(subKey)subCategory=subKey;
   else if(catName==='Tema V.02')subCategory='wedding';
   limit=8;
+  sendTrackEvent({type:'category_click',category:subKey?`${catName} · ${v02SubMap[subKey]||subKey}`:catName});
   render();
   document.querySelectorAll('#categories button').forEach(b=>{
     b.classList.toggle('active',b.dataset.category===catName);
@@ -361,6 +385,7 @@ function openPreview(theme){
   previewTheme=theme;
   if(siteSettings.previewMode==='new_tab'&&!theme.demoPhoto){
     if(theme.demo){
+      sendTrackEvent({type:'theme_preview',theme:theme.name,category:theme.category||'',variant:'no_photo'});
       openDemoUrl(theme.demo);
       return;
     }
@@ -397,6 +422,9 @@ function loadPreview(photo){
   clearTimeout(previewTimer);
   const url=photo?previewTheme?.demoPhoto:previewTheme?.demo;
   if(!url)return;
+  if(previewTheme?.name){
+    sendTrackEvent({type:'theme_preview',theme:previewTheme.name,category:previewTheme.category||'',variant:photo?'photo':'no_photo'});
+  }
   if(siteSettings.previewMode==='new_tab'){
     closePreviewModal();
     openDemoUrl(url);

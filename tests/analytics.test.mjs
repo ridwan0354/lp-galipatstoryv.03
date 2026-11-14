@@ -4,6 +4,8 @@ import {
   createEmptyAnalyticsState,
   recordVisit,
   recordWaClick,
+  recordThemePreview,
+  recordCategoryInterest,
   buildAnalyticsSummary,
   resolveVisitorId,
   jktMonth,
@@ -213,4 +215,75 @@ test('HTTP /api/track and /api/admin/analytics work end-to-end with monthly data
     if (child?.exitCode === null) await stop();
     await fs.rm(dir, { recursive: true, force: true });
   }
+});
+
+test('tracks region, device/HP model, traffic source, theme previews, and category interests', () => {
+  const now = Date.UTC(2026, 10, 14, 13, 0, 0); // 20:00 WIB (Malam / Prime Time)
+  const state = createEmptyAnalyticsState(now);
+  const v1 = resolveVisitorId('gs_user_iphone_bdg', '1.1.1.1', 'iPhone');
+  const v2 = resolveVisitorId('gs_user_samsung_sby', '2.2.2.2', 'Android');
+
+  // Visitor 1: iPhone Pro Max from Bandung via Instagram Ads
+  recordVisit(state, {
+    page: 'home',
+    visitorId: v1,
+    ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Instagram 310.0',
+    screen: '430x932',
+    city: 'Bandung',
+    region: 'Jawa Barat',
+    tz: 'Asia/Jakarta',
+    qs: '?fbclid=IwAR12345',
+    now
+  });
+
+  // Visitor 2: Samsung A54 from Surabaya via TikTok
+  recordVisit(state, {
+    page: 'tema',
+    visitorId: v2,
+    ua: 'Mozilla/5.0 (Linux; Android 14; K) AppleWebKit/537.36 Chrome/124.0 Mobile Safari/537.36 BytedanceWebview',
+    deviceModel: 'SM-A546E',
+    city: 'Surabaya',
+    region: 'Jawa Timur',
+    tz: 'Asia/Jakarta',
+    now
+  });
+
+  // Previews and Category Filter
+  recordCategoryInterest(state, { page: 'home', visitorId: v1, category: 'Eksklusif', now });
+  recordThemePreview(state, { page: 'home', visitorId: v1, theme: 'TE#06', category: 'Eksklusif', variant: 'photo', now });
+  recordThemePreview(state, { page: 'tema', visitorId: v2, theme: 'TE#06', category: 'Eksklusif', variant: 'no_photo', now });
+
+  // Visitor 1 clicks WhatsApp for TE#06
+  recordWaClick(state, {
+    page: 'home',
+    visitorId: v1,
+    location: 'preview',
+    theme: 'TE#06',
+    category: 'Eksklusif',
+    now
+  });
+
+  const summary = buildAnalyticsSummary(state, now);
+  const all = summary.pages.all;
+
+  assert.equal(all.totalPreviews, 2);
+  assert.equal(all.uniquePreviewers, 2);
+  assert.equal(all.regions.length, 2);
+  assert.ok(all.regions.some(r => r.region.includes('Bandung, Jawa Barat (WIB)') && r.uniqueWaClickers === 1));
+  assert.ok(all.devices.some(d => d.device.includes('iPhone Pro Max / Plus') && d.osType === 'iOS'));
+  assert.ok(all.devices.some(d => d.device.includes('Samsung Galaxy A Series (SM-A546E)') && d.osType === 'Android'));
+  assert.ok(all.sources.some(s => s.source.includes('Iklan Instagram')));
+  assert.ok(all.sources.some(s => s.source.includes('TikTok')));
+  assert.equal(all.categoryInterests[0].category, 'Eksklusif');
+
+  const te06 = all.themes.find(t => t.name === 'TE#06');
+  assert.ok(te06);
+  assert.equal(te06.previewCount, 2);
+  assert.equal(te06.previewWithPhoto, 1);
+  assert.equal(te06.previewNoPhoto, 1);
+  assert.equal(te06.totalClicks, 1);
+
+  const malamSlot = all.hourSlots.find(h => h.key === 'malam');
+  assert.equal(malamSlot.uniqueVisitors, 2);
+  assert.equal(malamSlot.waClicks, 1);
 });
