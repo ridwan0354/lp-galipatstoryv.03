@@ -38,7 +38,11 @@ function getCurrentPageKey(){
 function sendTrackEvent(payload){
   try{
     const body=JSON.stringify({...payload,visitorId:getVisitorId(),page:getCurrentPageKey()});
-    fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
+    if(payload.type==='wa_click'&&typeof navigator!=='undefined'&&typeof navigator.sendBeacon==='function'){
+      const blob=new Blob([body],{type:'application/json'});
+      if(navigator.sendBeacon('/api/catatan',blob))return;
+    }
+    fetch('/api/catatan',{method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});
   }catch(_){}
 }
 sendTrackEvent({type:'visit'});
