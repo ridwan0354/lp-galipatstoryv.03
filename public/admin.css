@@ -6,6 +6,12 @@
 .login h1,.admin-heading h1{font-size:40px;letter-spacing:-.8px;margin:4px 0 8px}
 label{display:block;font-size:13px;margin:16px 0}
 label input:not([type=checkbox]),label textarea{display:block;width:100%;margin-top:6px}
+.password-input-wrap{position:relative;width:100%;margin-top:6px;display:flex;align-items:center}
+.password-input-wrap input{margin-top:0!important;padding-right:44px!important;width:100%}
+.btn-toggle-password{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:0;padding:6px 8px;cursor:pointer;color:#687e71;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;transition:color .15s,background-color .15s;line-height:1}
+.btn-toggle-password:hover{color:var(--ink);background-color:rgba(35,72,62,.08)}
+.btn-toggle-password:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn-toggle-password svg{display:block;pointer-events:none}
 form .button{margin-top:10px}
 .admin-heading{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-top:32px;padding-bottom:20px;border-bottom:1px solid #dce4d7}
 .admin-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
