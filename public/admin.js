@@ -27,6 +27,24 @@ function getCategoryNames(){
   return Array.from(set);
 }
 
+async function moveCategory(index,delta){
+  const names=getCategoryNames();
+  const target=index+delta;
+  if(target<0||target>=names.length)return;
+  const next=[...names];
+  [next[index],next[target]]=[next[target],next[index]];
+  setText('#cat-order-status','Menyimpan urutan…');
+  try{
+    categories=await api('/api/admin/categories/reorder','PUT',{order:next});
+    renderCategories();
+    setText('#cat-order-status','✓ Urutan kategori berhasil diperbarui di website');
+    setTimeout(()=>setText('#cat-order-status',''),2500);
+  }catch(e){
+    setText('#cat-order-status','');
+    setText('#cat-message',e.message);
+  }
+}
+
 function renderCategories(preferredSelected){
   const sel=$('#theme-category-select');
   if(sel){
@@ -45,12 +63,15 @@ function renderCategories(preferredSelected){
   if(listEl){
     listEl.replaceChildren();
     const names=getCategoryNames();
-    names.forEach(name=>{
+    names.forEach((name,idx)=>{
       const li=document.createElement('li');
       const info=document.createElement('div');
+      const num=document.createElement('span');
+      num.className='cat-num';
+      num.textContent=`${idx+1}.`;
       const span=document.createElement('span');
       span.textContent=name;
-      info.append(span);
+      info.append(num,span);
       const catObj=categories.find(c=>c.name===name);
       if(catObj?.note){
         const note=document.createElement('small');
@@ -61,12 +82,34 @@ function renderCategories(preferredSelected){
       const right=document.createElement('div');
       right.style.display='flex';
       right.style.alignItems='center';
-      right.style.gap='10px';
+      right.style.gap='8px';
       const count=themes.filter(t=>t.category===name).length;
       const countBadge=document.createElement('small');
       countBadge.textContent=`${count} tema`;
       countBadge.style.color='#68736b';
       right.append(countBadge);
+
+      const orderBtns=document.createElement('div');
+      orderBtns.className='cat-order-btns';
+      const upBtn=document.createElement('button');
+      upBtn.type='button';
+      upBtn.className='cat-move-btn';
+      upBtn.textContent='↑';
+      upBtn.title='Geser ke atas (tampil lebih dulu)';
+      upBtn.disabled=idx===0;
+      upBtn.onclick=()=>moveCategory(idx,-1);
+
+      const downBtn=document.createElement('button');
+      downBtn.type='button';
+      downBtn.className='cat-move-btn';
+      downBtn.textContent='↓';
+      downBtn.title='Geser ke bawah';
+      downBtn.disabled=idx===names.length-1;
+      downBtn.onclick=()=>moveCategory(idx,1);
+
+      orderBtns.append(upBtn,downBtn);
+      right.append(orderBtns);
+
       if(catObj){
         const delBtn=document.createElement('button');
         delBtn.type='button';

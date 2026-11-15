@@ -84,11 +84,19 @@ test('category creation and listing for admin and public catalog', async () => {
     const afterCats = await (await api('/api/categories', 'GET', undefined, false)).json();
     assert.ok(afterCats.some(c => c.name === 'Muslim Modern'));
 
-    // 7. Restart server and verify persistence
+    // 7. Reorder categories (move Muslim Modern to first position)
+    const reorderOrder = ['Muslim Modern', ...afterCats.filter(c => c.name !== 'Muslim Modern').map(c => c.name)];
+    const reorderRes = await api('/api/admin/categories/reorder', 'PUT', { order: reorderOrder });
+    assert.equal(reorderRes.status, 200);
+    const reordered = await reorderRes.json();
+    assert.equal(reordered[0].name, 'Muslim Modern');
+
+    // 8. Restart server and verify persistence including order
     await stop();
     await start();
     const persistedCats = await (await api('/api/categories', 'GET', undefined, false)).json();
     assert.ok(persistedCats.some(c => c.name === 'Muslim Modern'));
+    assert.equal(persistedCats[0].name, 'Muslim Modern');
   } finally {
     if (child?.exitCode === null) await stop();
     await fs.rm(dir, { recursive: true, force: true });

@@ -7,9 +7,9 @@
   <title>Admin — Galipat Story</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
-  <link rel="stylesheet" href="/style.css?v=3.2.1">
-  <link rel="stylesheet" href="/admin.css?v=3.2.1">
-  <script defer src="/admin.js?v=3.2.1"></script>
+  <link rel="stylesheet" href="/style.css?v=3.2.2">
+  <link rel="stylesheet" href="/admin.css?v=3.2.2">
+  <script defer src="/admin.js?v=3.2.2"></script>
 </head>
 <body class="admin-body">
   <nav class="nav wrap">
@@ -50,7 +50,7 @@
         <div class="admin-actions">
           <button id="btn-analytics" type="button" class="button btn-analytics-toggle">📊 Lihat Statistik &amp; Analitik</button>
           <button id="new" class="button">+ Tambah tema</button>
-          <button id="new-cat-btn" class="button outline">+ Tambah kategori</button>
+          <button id="new-cat-btn" class="button outline">🗂️ Kelola &amp; Urutkan Kategori</button>
           <button id="logout" class="button outline">Keluar</button>
         </div>
       </div>
@@ -585,7 +585,9 @@
       <button id="save-cat" class="button">+ Simpan Kategori Baru</button>
     </form>
     <div class="category-list-section">
-      <h3>Daftar Kategori Aktif</h3>
+      <h3>Urutan &amp; Daftar Kategori Aktif</h3>
+      <p class="quiet cat-order-hint">Susunan di website: <strong>Bestseller → ★ Favorit → Urutan di bawah ini</strong>. Gunakan tombol <strong>↑ / ↓</strong> untuk mengatur siapa yang tampil lebih dulu (otomatis tersimpan).</p>
+      <p id="cat-order-status" class="cat-order-status" role="status"></p>
       <ul id="existing-cat-list" class="existing-cat-list"></ul>
     </div>
   </dialog>
