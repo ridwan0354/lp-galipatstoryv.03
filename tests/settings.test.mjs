@@ -93,6 +93,50 @@ test('settings API: get public settings, admin authentication, update and persis
     // 9. Sanitization: unrecognized mode defaults to 'new_tab'
     const sanitizeRes = await (await api('/api/admin/settings', 'POST', { previewMode: 'unknown_stuff' })).json();
     assert.equal(sanitizeRes.previewMode, 'new_tab');
+
+    // 10. Update and persist temaBannerGroups configuration
+    const customTemaGroups = {
+      all: {
+        name: 'Gambar 1 (Mulai 29K)',
+        title: 'Koleksi Hemat 29K',
+        sub: 'PILIH DESAIN FAVORITMU',
+        categories: ['Premium', 'Floral'],
+        defaultCat: 'Floral',
+        subcategories: ['wedding', 'birthday']
+      },
+      v02: {
+        name: 'Gambar 2 (Mulai 50K)',
+        title: 'Koleksi 50K',
+        sub: '',
+        categories: ['Tema V.02'],
+        defaultCat: 'Tema V.02',
+        subcategories: ['khitan', 'aqiqah']
+      },
+      eksklusif: {
+        name: 'Gambar 3 (Tema Eksklusif)',
+        title: 'Tema Eksklusif VIP',
+        sub: 'Desain Terbatas',
+        categories: ['Eksklusif', 'Adat'],
+        defaultCat: 'Eksklusif',
+        subcategories: []
+      }
+    };
+    const updateBannerRes = await api('/api/admin/settings', 'POST', { temaBannerGroups: customTemaGroups });
+    assert.equal(updateBannerRes.status, 200);
+    const updatedBannerData = await updateBannerRes.json();
+    assert.deepEqual(updatedBannerData.temaBannerGroups.all.categories, ['Premium', 'Floral']);
+    assert.equal(updatedBannerData.temaBannerGroups.all.defaultCat, 'Floral');
+    assert.equal(updatedBannerData.temaBannerGroups.all.title, 'Koleksi Hemat 29K');
+
+    // 11. Verify disk persistence of temaBannerGroups
+    const diskAfterBanner = JSON.parse(await fs.readFile(path.join(dir, 'data/settings.json'), 'utf8'));
+    assert.deepEqual(diskAfterBanner.temaBannerGroups.v02.categories, ['Tema V.02']);
+    assert.deepEqual(diskAfterBanner.temaBannerGroups.v02.subcategories, ['khitan', 'aqiqah']);
+
+    // 12. Verify public /api/settings serves updated temaBannerGroups
+    const publicBannerRes = await (await api('/api/settings', 'GET', undefined, false)).json();
+    assert.deepEqual(publicBannerRes.temaBannerGroups.all.categories, ['Premium', 'Floral']);
+    assert.equal(publicBannerRes.temaBannerGroups.eksklusif.title, 'Tema Eksklusif VIP');
   } finally {
     if (child?.exitCode === null) await stop();
     await fs.rm(dir, { recursive: true, force: true });

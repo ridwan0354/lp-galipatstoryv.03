@@ -84,6 +84,22 @@ td img{width:42px;height:54px;object-fit:cover;border-radius:6px;border:1px soli
 .password-box{margin:10px 0 0}
 .password-box summary{font-weight:700;font-size:13.5px;cursor:pointer;color:#1f4438;margin-bottom:10px}
 
+/* Banner & Category Catalog Settings */
+.banner-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:16px}
+@media(max-width:960px){.banner-settings-grid{grid-template-columns:1fr}}
+.banner-group-card{background:#ffffff;border:1.5px solid #d4ded0;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 2px 6px rgba(20,40,32,.03)}
+.banner-group-header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid #e3ebe0}
+.banner-badge{font-size:11px;font-weight:700;background:#e2ede0;color:#1f4438;padding:4px 9px;border-radius:6px;white-space:nowrap}
+.banner-group-title{font-size:15px;font-weight:700;color:var(--ink);margin:0}
+.banner-field-label{font-size:12px;font-weight:700;color:#4b5d52;margin:0 0 6px;display:block}
+.banner-checkbox-list{display:flex;flex-direction:column;gap:6px;max-height:190px;overflow-y:auto;background:#f8faf6;border:1px solid #dce4d7;border-radius:8px;padding:10px 12px}
+.banner-check-item{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink);cursor:pointer;margin:0;user-select:none}
+.banner-check-item input[type="checkbox"]{cursor:pointer;width:15px;height:15px;margin:0;accent-color:var(--green)}
+.banner-input-sm,.banner-select-sm{width:100%;padding:9px 12px;border:1px solid #c8d4c4;border-radius:6px;font-size:13px;box-sizing:border-box;color:var(--ink);background:#fff}
+.banner-subhead-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.banner-subhead-row .banner-field-label{margin-bottom:0}
+.banner-quick-link{font-size:11px;color:var(--green);font-weight:600;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline}
+
 dialog{border:0;border-radius:14px;width:640px;max-width:calc(100vw - 24px);max-height:90vh;padding:28px;background:var(--paper);color:var(--ink)}
 dialog::backdrop{background:#182f28aa;backdrop-filter:blur(3px)}
 .editor-heading{display:flex;justify-content:space-between;align-items:center}

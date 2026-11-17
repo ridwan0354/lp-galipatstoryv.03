@@ -260,6 +260,15 @@ Promise.all([
 ]).then(([data,serverCategories,serverSettings])=>{
   themes=data;
   if(serverSettings?.previewMode)siteSettings.previewMode=serverSettings.previewMode;
+  if(serverSettings?.temaBannerGroups){
+    siteSettings.temaBannerGroups=serverSettings.temaBannerGroups;
+    if(typeof window!=='undefined'){
+      window.temaBannerGroups=serverSettings.temaBannerGroups;
+      if(typeof window.onTemaBannerGroupsLoaded==='function'){
+        window.onTemaBannerGroupsLoaded(serverSettings.temaBannerGroups);
+      }
+    }
+  }
   const catNamesSet=new Set();
   serverCategories.forEach(c=>{
     if(c.name){
@@ -286,10 +295,14 @@ Promise.all([
     catContainer.append(b);
   }
 
-  const subContainer=document.getElementById('subcategories');
-  if(subContainer){
+  window.renderSubcategories=function(allowedKeys){
+    const subContainer=document.getElementById('subcategories');
+    if(!subContainer)return;
     subContainer.replaceChildren();
-    for(const sub of v02Subcategories){
+    const list=(Array.isArray(allowedKeys)&&allowedKeys.length>0)
+      ?v02Subcategories.filter(s=>allowedKeys.includes(s.key))
+      :v02Subcategories;
+    for(const sub of list){
       const b=el('button','',sub.label);
       b.type='button';
       b.dataset.key=sub.key;
@@ -301,7 +314,11 @@ Promise.all([
       };
       subContainer.append(b);
     }
-  }
+    if(list.length>0&&!list.some(s=>s.key===subCategory)){
+      subCategory=list[0].key;
+    }
+  };
+  window.renderSubcategories(null);
 
   render();
 }).catch(()=>{document.getElementById('result-count').textContent='Katalog belum dapat dimuat. Silakan muat ulang atau hubungi admin.'});

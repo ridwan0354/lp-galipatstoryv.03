@@ -19,6 +19,9 @@ function fmtTime(ts){
   try{return new Date(ts).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
   catch{return '—';}
 }
+function escapeHtml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 function getCategoryNames(){
   const set=new Set();
@@ -217,7 +220,151 @@ function renderSettings(){
   const mode=settings?.previewMode||'new_tab';
   const radio=$(`#settings-form input[name="previewMode"][value="${mode}"]`);
   if(radio)radio.checked=true;
+  renderBannerSettings();
 }
+
+const BANNER_CONFIG_DEFS = [
+  { key: 'all', badge: 'GAMBAR 1 (MULAI 29K)', label: 'Gambar 1: Mulai 29K', defaultTitle: 'Pilih Tema Sesuai Karaktermu', defaultSub: 'TEKAN "TOMBOL DI BAWAH" UNTUK MELIHAT KATALOG UNDANGAN KAMI.' },
+  { key: 'v02', badge: 'GAMBAR 2 (MULAI 50K)', label: 'Gambar 2: Mulai 50K', defaultTitle: 'Pilih Kategori Tema', defaultSub: 'PILIH KATEGORI TEMA DI BAWAH UNTUK MELIHAT DAFTAR DESAIN:' },
+  { key: 'eksklusif', badge: 'GAMBAR 3 (EKSKLUSIF)', label: 'Gambar 3: Tema Eksklusif', defaultTitle: 'Tema Eksklusif', defaultSub: '' }
+];
+
+const V02_SUB_LIST = [
+  { key: 'wedding', label: 'Wedding' },
+  { key: 'birthday', label: 'Kids & Birthday' },
+  { key: 'aqiqah', label: 'Aqiqah & Tasmiyah' },
+  { key: 'khitan', label: 'Tasyakuran Khitan' },
+  { key: 'umum', label: 'Umum & Seminar' },
+  { key: 'christmas', label: 'Christmas & New Year' },
+  { key: 'syukuran', label: 'Syukuran & Islami' },
+  { key: 'party', label: 'Party & Dinner' },
+  { key: 'school', label: 'School & Graduation' }
+];
+
+function renderBannerSettings(){
+  const container=$('#banner-settings-container');
+  if(!container)return;
+  const currentGroups=settings?.temaBannerGroups||{};
+
+  container.innerHTML=BANNER_CONFIG_DEFS.map(bDef=>{
+    const group=currentGroups[bDef.key]||{};
+    const title=group.title!==undefined?group.title:bDef.defaultTitle;
+    const sub=group.sub!==undefined?group.sub:bDef.defaultSub;
+    const selectedCats=Array.isArray(group.categories)?group.categories:[];
+    const selectedSubs=Array.isArray(group.subcategories)?group.subcategories:[];
+    const allCatNames=categories.map(c=>c.name);
+
+    return `
+      <div class="banner-group-card" data-banner="${bDef.key}">
+        <div class="banner-group-header">
+          <h3 class="banner-group-title">${escapeHtml(bDef.label)}</h3>
+          <span class="banner-badge">${escapeHtml(bDef.badge)}</span>
+        </div>
+
+        <div>
+          <label class="banner-field-label">Judul Tampilan:</label>
+          <input type="text" class="banner-input-sm banner-title-input" data-banner="${bDef.key}" value="${escapeHtml(title)}" placeholder="Contoh: Pilih Tema Sesuai Karaktermu">
+        </div>
+
+        <div>
+          <label class="banner-field-label">Teks Petunjuk / Sub-judul:</label>
+          <input type="text" class="banner-input-sm banner-sub-input" data-banner="${bDef.key}" value="${escapeHtml(sub)}" placeholder="Contoh: TEKAN TOMBOL DI BAWAH...">
+        </div>
+
+        <div>
+          <div class="banner-subhead-row">
+            <label class="banner-field-label">Pilih Kategori Tema:</label>
+            <div>
+              <button type="button" class="banner-quick-link" onclick="quickSelectCats('${bDef.key}',true)">Pilih Semua</button>
+              <span style="color:#aaa;font-size:11px;"> · </span>
+              <button type="button" class="banner-quick-link" onclick="quickSelectCats('${bDef.key}',false)">Kosongkan</button>
+            </div>
+          </div>
+          <div class="banner-checkbox-list" id="banner-cat-list-${bDef.key}">
+            ${allCatNames.map(catName=>`
+              <label class="banner-check-item">
+                <input type="checkbox" class="banner-cat-cb" data-banner="${bDef.key}" value="${escapeHtml(catName)}" ${selectedCats.includes(catName)?'checked':''} onchange="updateDefaultCatOptions('${bDef.key}')">
+                <span>${escapeHtml(catName)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+
+        <div>
+          <label class="banner-field-label">Kategori Default yang Langsung Terbuka:</label>
+          <select class="banner-select-sm banner-defcat-select" id="banner-defcat-${bDef.key}" data-banner="${bDef.key}">
+          </select>
+        </div>
+
+        <div>
+          <div class="banner-subhead-row">
+            <label class="banner-field-label">Sub-Tema (Khusus Tema V.02 &amp; Umum):</label>
+            <div>
+              <button type="button" class="banner-quick-link" onclick="quickSelectSubs('${bDef.key}',true)">Pilih Semua</button>
+              <span style="color:#aaa;font-size:11px;"> · </span>
+              <button type="button" class="banner-quick-link" onclick="quickSelectSubs('${bDef.key}',false)">Kosongkan</button>
+            </div>
+          </div>
+          <div class="banner-checkbox-list">
+            ${V02_SUB_LIST.map(sub=>`
+              <label class="banner-check-item">
+                <input type="checkbox" class="banner-subcat-cb" data-banner="${bDef.key}" value="${escapeHtml(sub.key)}" ${selectedSubs.includes(sub.key)?'checked':''}>
+                <span>${escapeHtml(sub.label)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  BANNER_CONFIG_DEFS.forEach(bDef=>{
+    const group=currentGroups[bDef.key]||{};
+    updateDefaultCatOptions(bDef.key,group.defaultCat);
+  });
+}
+
+window.quickSelectCats=function(bannerKey,selectAll){
+  const cbs=document.querySelectorAll(`.banner-cat-cb[data-banner="${bannerKey}"]`);
+  cbs.forEach(cb=>{cb.checked=!!selectAll;});
+  updateDefaultCatOptions(bannerKey);
+};
+
+window.quickSelectSubs=function(bannerKey,selectAll){
+  const cbs=document.querySelectorAll(`.banner-subcat-cb[data-banner="${bannerKey}"]`);
+  cbs.forEach(cb=>{cb.checked=!!selectAll;});
+};
+
+window.updateDefaultCatOptions=function(bannerKey,preferredVal){
+  const select=$(`#banner-defcat-${bannerKey}`);
+  if(!select)return;
+  const currentVal=preferredVal!==undefined?preferredVal:select.value;
+  const checkedBoxes=Array.from(document.querySelectorAll(`.banner-cat-cb[data-banner="${bannerKey}"]:checked`));
+
+  select.replaceChildren();
+
+  if(checkedBoxes.length===0){
+    const opt=document.createElement('option');
+    opt.value='';
+    opt.textContent='(Tidak ada kategori yang dipilih)';
+    select.appendChild(opt);
+    return;
+  }
+
+  checkedBoxes.forEach(cb=>{
+    const opt=document.createElement('option');
+    opt.value=cb.value;
+    opt.textContent=cb.value;
+    if(cb.value===currentVal){
+      opt.selected=true;
+    }
+    select.appendChild(opt);
+  });
+
+  if(!select.value&&checkedBoxes[0]){
+    select.value=checkedBoxes[0].value;
+  }
+};
 
 function getActiveMonthData(){
   if(!analyticsData)return null;
@@ -1088,6 +1235,48 @@ if(settingsForm){
       renderSettings();
       if(msg){
         msg.textContent='✓ Pengaturan berhasil disimpan';
+        setTimeout(()=>{msg.textContent='';},3500);
+      }
+    }catch(err){
+      if(msg)msg.textContent='';
+      notice(err.message);
+    }finally{
+      btn.disabled=false;
+    }
+  };
+}
+
+const bannerSettingsForm=$('#banner-settings-form');
+if(bannerSettingsForm){
+  bannerSettingsForm.onsubmit=async e=>{
+    e.preventDefault();
+    const btn=$('#save-banner-settings-btn');
+    const msg=$('#banner-settings-notice');
+    btn.disabled=true;
+    if(msg)msg.textContent='Menyimpan…';
+    try{
+      const temaBannerGroups={};
+      BANNER_CONFIG_DEFS.forEach(bDef=>{
+        const titleInput=$(`.banner-title-input[data-banner="${bDef.key}"]`);
+        const subInput=$(`.banner-sub-input[data-banner="${bDef.key}"]`);
+        const catCbs=Array.from(document.querySelectorAll(`.banner-cat-cb[data-banner="${bDef.key}"]:checked`));
+        const defCatSelect=$(`#banner-defcat-${bDef.key}`);
+        const subCbs=Array.from(document.querySelectorAll(`.banner-subcat-cb[data-banner="${bDef.key}"]:checked`));
+
+        temaBannerGroups[bDef.key]={
+          name:bDef.label,
+          title:titleInput?titleInput.value.trim():bDef.defaultTitle,
+          sub:subInput?subInput.value.trim():bDef.defaultSub,
+          categories:catCbs.map(cb=>cb.value),
+          defaultCat:defCatSelect?defCatSelect.value:'',
+          subcategories:subCbs.map(cb=>cb.value)
+        };
+      });
+
+      settings=await api('/api/admin/settings','POST',{temaBannerGroups});
+      renderBannerSettings();
+      if(msg){
+        msg.textContent='✓ Pengaturan gambar & tema berhasil disimpan';
         setTimeout(()=>{msg.textContent='';},3500);
       }
     }catch(err){

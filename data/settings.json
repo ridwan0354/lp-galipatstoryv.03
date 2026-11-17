@@ -1,3 +1,61 @@
 {
-  "previewMode": "modal"
+  "previewMode": "modal",
+  "temaBannerGroups": {
+    "all": {
+      "name": "Gambar 1 (Mulai 29K)",
+      "title": "Pilih Tema Sesuai Karaktermu",
+      "sub": "TEKAN \"TOMBOL DI BAWAH\" UNTUK MELIHAT KATALOG UNDANGAN KAMI.",
+      "categories": [
+        "Adat",
+        "Premium",
+        "Animasi",
+        "Movement",
+        "Klasik",
+        "Floral"
+      ],
+      "defaultCat": "Adat",
+      "subcategories": [
+        "wedding",
+        "birthday",
+        "aqiqah",
+        "khitan",
+        "umum",
+        "christmas",
+        "syukuran",
+        "party",
+        "school"
+      ]
+    },
+    "v02": {
+      "name": "Gambar 2 (Mulai 50K)",
+      "title": "Pilih Kategori Tema",
+      "sub": "PILIH KATEGORI TEMA DI BAWAH UNTUK MELIHAT DAFTAR DESAIN:",
+      "categories": [
+        "Syukuran",
+        "Tema V.02"
+      ],
+      "defaultCat": "Tema V.02",
+      "subcategories": [
+        "wedding",
+        "birthday",
+        "aqiqah",
+        "khitan",
+        "umum",
+        "christmas",
+        "syukuran",
+        "party",
+        "school"
+      ]
+    },
+    "eksklusif": {
+      "name": "Gambar 3 (Tema Eksklusif)",
+      "title": "Tema Eksklusif",
+      "sub": "",
+      "categories": [
+        "Eksklusif"
+      ],
+      "defaultCat": "Eksklusif",
+      "subcategories": []
+    }
+  }
 }

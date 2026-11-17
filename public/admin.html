@@ -8,8 +8,8 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
   <link rel="stylesheet" href="/style.css?v=3.2.2">
-  <link rel="stylesheet" href="/admin.css?v=3.2.3">
-  <script defer src="/admin.js?v=3.2.3"></script>
+  <link rel="stylesheet" href="/admin.css?v=3.2.4">
+  <script defer src="/admin.js?v=3.2.4"></script>
 </head>
 <body class="admin-body">
   <nav class="nav wrap">
@@ -527,6 +527,24 @@
               </form>
             </details>
           </div>
+        </div>
+
+        <!-- PENGATURAN BANNER GAMBAR & FILTER KATALOG /TEMA -->
+        <div class="settings-card" style="margin-top:24px;">
+          <div class="settings-card-header">
+            <p class="eyebrow">PENGATURAN HALAMAN KATALOG (/TEMA)</p>
+            <h2>Atur Banner Gambar &amp; Kategori Tema (/tema)</h2>
+            <p class="quiet">Tentukan tema (kategori) dan sub-tema yang muncul saat pengunjung mengklik <strong>Gambar 1 (Mulai 29K)</strong>, <strong>Gambar 2 (Mulai 50K)</strong>, atau <strong>Gambar 3 (Tema Eksklusif)</strong> di halaman katalog <a href="/tema" target="_blank" rel="noopener">/tema ↗</a>.</p>
+          </div>
+
+          <form id="banner-settings-form">
+            <div id="banner-settings-container" class="banner-settings-grid"></div>
+
+            <div class="settings-btn-row" style="margin-top:22px;">
+              <button type="submit" id="save-banner-settings-btn" class="button">💾 Simpan Pengaturan Gambar &amp; Tema</button>
+              <span id="banner-settings-notice" class="settings-save-notice" role="status"></span>
+            </div>
+          </form>
         </div>
       </div>
     </section>

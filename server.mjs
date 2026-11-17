@@ -28,9 +28,46 @@ const defaultCats=[
 let categories=[];
 try{categories=JSON.parse(await fs.readFile(catDb,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;categories=[...defaultCats];await fs.writeFile(catDb,JSON.stringify(categories,null,2)).catch(()=>{});}
 function mutateCategories(fn){const job=queue.then(async()=>{const next=fn(categories);await fs.writeFile(catDb+'.tmp',JSON.stringify(next,null,2));await fs.rename(catDb+'.tmp',catDb);categories=next;});queue=job.catch(()=>{});return job;}
+const defaultTemaBannerGroups = {
+  all: {
+    name: 'Gambar 1 (Mulai 29K)',
+    title: 'Pilih Tema Sesuai Karaktermu',
+    sub: 'TEKAN "TOMBOL DI BAWAH" UNTUK MELIHAT KATALOG UNDANGAN KAMI.',
+    categories: ['Adat', 'Premium', 'Animasi', 'Movement', 'Klasik', 'Floral'],
+    defaultCat: 'Adat',
+    subcategories: ['wedding', 'birthday', 'aqiqah', 'khitan', 'umum', 'christmas', 'syukuran', 'party', 'school']
+  },
+  v02: {
+    name: 'Gambar 2 (Mulai 50K)',
+    title: 'Pilih Kategori Tema',
+    sub: 'PILIH KATEGORI TEMA DI BAWAH UNTUK MELIHAT DAFTAR DESAIN:',
+    categories: ['Syukuran', 'Tema V.02'],
+    defaultCat: 'Tema V.02',
+    subcategories: ['wedding', 'birthday', 'aqiqah', 'khitan', 'umum', 'christmas', 'syukuran', 'party', 'school']
+  },
+  eksklusif: {
+    name: 'Gambar 3 (Tema Eksklusif)',
+    title: 'Tema Eksklusif',
+    sub: '',
+    categories: ['Eksklusif'],
+    defaultCat: 'Eksklusif',
+    subcategories: []
+  }
+};
 const settingsDb=path.join(root,'data/settings.json');
-let settings={previewMode:'new_tab'};
-try{settings={...settings,...JSON.parse(await fs.readFile(settingsDb,'utf8'))};}catch(e){if(e.code!=='ENOENT')throw e;await fs.writeFile(settingsDb,JSON.stringify(settings,null,2)).catch(()=>{});}
+let settings={previewMode:'new_tab',temaBannerGroups:defaultTemaBannerGroups};
+try{
+  const loaded=JSON.parse(await fs.readFile(settingsDb,'utf8'));
+  settings={
+    ...settings,
+    ...loaded,
+    temaBannerGroups: {
+      all: { ...defaultTemaBannerGroups.all, ...(loaded.temaBannerGroups?.all || {}) },
+      v02: { ...defaultTemaBannerGroups.v02, ...(loaded.temaBannerGroups?.v02 || {}) },
+      eksklusif: { ...defaultTemaBannerGroups.eksklusif, ...(loaded.temaBannerGroups?.eksklusif || {}) }
+    }
+  };
+}catch(e){if(e.code!=='ENOENT')throw e;await fs.writeFile(settingsDb,JSON.stringify(settings,null,2)).catch(()=>{});}
 function mutateSettings(fn){const job=queue.then(async()=>{const next=fn(settings);await fs.writeFile(settingsDb+'.tmp',JSON.stringify(next,null,2));await fs.rename(settingsDb+'.tmp',settingsDb);settings=next;});queue=job.catch(()=>{});return job;}
 const analyticsDb=path.join(root,'data/analytics.json');
 const INDO_MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -290,7 +327,20 @@ if(!logged)return send(res,401,{error:'Silakan masuk kembali.'});
 if((p==='/api/admin/ringkasan'||p==='/api/admin/analytics')&&req.method==='GET')return send(res,200,buildAnalyticsSummary(analytics));
 if((p==='/api/admin/ringkasan/reset'||p==='/api/admin/analytics/reset')&&req.method==='POST'){await mutateAnalytics(()=>createEmptyAnalyticsState());return send(res,200,buildAnalyticsSummary(analytics));}
 if(p==='/api/admin/settings'&&req.method==='GET')return send(res,200,settings);
-if(p==='/api/admin/settings'&&['POST','PUT'].includes(req.method)){const b=await body(req);const mode=b.previewMode==='modal'?'modal':'new_tab';await mutateSettings(all=>({...all,previewMode:mode}));return send(res,200,settings);}
+if(p==='/api/admin/settings'&&['POST','PUT'].includes(req.method)){
+  const b=await body(req);
+  await mutateSettings(all=>{
+    const next={...all};
+    if(b.previewMode!==undefined){
+      next.previewMode=b.previewMode==='modal'?'modal':'new_tab';
+    }
+    if(b.temaBannerGroups&&typeof b.temaBannerGroups==='object'){
+      next.temaBannerGroups=b.temaBannerGroups;
+    }
+    return next;
+  });
+  return send(res,200,settings);
+}
 if(p==='/api/admin/categories'&&req.method==='GET'){const list=[...categories];const seen=new Set(list.map(c=>c.name));for(const t of themes){if(!seen.has(t.category)){seen.add(t.category);list.push({id:t.category.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name:t.category,note:''});}}return send(res,200,list);}
 if(p==='/api/admin/categories'&&req.method==='POST'){const b=await body(req);const name=String(b.name||'').trim().slice(0,60);const note=String(b.note||'').trim().slice(0,300);if(!name)throw Error('Nama kategori wajib diisi.');if(categories.some(c=>c.name.toLowerCase()===name.toLowerCase()))throw Error('Kategori sudah ada.');const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||randomBytes(4).toString('hex');const item={id,name,note};await mutateCategories(all=>[...all,item]);return send(res,200,item);}
 if(p==='/api/admin/categories/reorder'&&['PUT','POST'].includes(req.method)){const b=await body(req);const order=Array.isArray(b.order)?b.order.map(x=>String(x||'').trim()).filter(Boolean):[];if(!order.length)throw Error('Urutan kategori tidak valid.');await mutateCategories(all=>{const map=new Map(all.map(c=>[c.name,c]));for(const t of themes){if(t.category&&!map.has(t.category)){map.set(t.category,{id:t.category.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||randomBytes(4).toString('hex'),name:t.category,note:''});}}const next=[],used=new Set();for(const name of order){if(map.has(name)&&!used.has(name)){next.push(map.get(name));used.add(name);}}for(const [name,c] of map.entries()){if(!used.has(name))next.push(c);}return next;});return send(res,200,categories);}
