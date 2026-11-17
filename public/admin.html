@@ -8,8 +8,8 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
   <link rel="stylesheet" href="/style.css?v=3.2.2">
-  <link rel="stylesheet" href="/admin.css?v=3.2.4">
-  <script defer src="/admin.js?v=3.2.4"></script>
+  <link rel="stylesheet" href="/admin.css?v=3.2.5">
+  <script defer src="/admin.js?v=3.2.5"></script>
 </head>
 <body class="admin-body">
   <nav class="nav wrap">
@@ -527,6 +527,24 @@
               </form>
             </details>
           </div>
+        </div>
+
+        <!-- PENGATURAN THUMBNAIL SETIAP HALAMAN (OG / SHARE SOSMED & WHATSAPP) -->
+        <div class="settings-card" style="margin-top:24px;">
+          <div class="settings-card-header">
+            <p class="eyebrow">THUMBNAIL HALAMAN &amp; SHARE SOSMED</p>
+            <h2>Thumbnail Setiap Halaman (WhatsApp, Facebook, Sosmed &amp; Ads)</h2>
+            <p class="quiet">Ganti gambar thumbnail, judul, dan deskripsi pratinjau yang muncul saat link halaman Beranda (<code>/</code>), Katalog Tema (<code>/tema</code>), atau Web Invitation (<code>/web-invitation</code>) dibagikan di WhatsApp, Facebook Ads, Instagram, dll.</p>
+          </div>
+
+          <form id="page-thumbnails-form">
+            <div id="page-thumbnails-container" class="page-thumbnails-grid"></div>
+
+            <div class="settings-btn-row" style="margin-top:22px;">
+              <button type="submit" id="save-page-thumbnails-btn" class="button">💾 Simpan Thumbnail Halaman</button>
+              <span id="page-thumbnails-notice" class="settings-save-notice" role="status"></span>
+            </div>
+          </form>
         </div>
 
         <!-- PENGATURAN BANNER GAMBAR & FILTER KATALOG /TEMA -->

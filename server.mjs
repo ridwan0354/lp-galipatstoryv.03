@@ -31,6 +31,7 @@ function mutateCategories(fn){const job=queue.then(async()=>{const next=fn(categ
 const defaultTemaBannerGroups = {
   all: {
     name: 'Gambar 1 (Mulai 29K)',
+    image: '/assets/images/shopee-1.webp',
     title: 'Pilih Tema Sesuai Karaktermu',
     sub: 'TEKAN "TOMBOL DI BAWAH" UNTUK MELIHAT KATALOG UNDANGAN KAMI.',
     categories: ['Adat', 'Premium', 'Animasi', 'Movement', 'Klasik', 'Floral'],
@@ -39,6 +40,7 @@ const defaultTemaBannerGroups = {
   },
   v02: {
     name: 'Gambar 2 (Mulai 50K)',
+    image: '/assets/images/shopee-2.webp',
     title: 'Pilih Kategori Tema',
     sub: 'PILIH KATEGORI TEMA DI BAWAH UNTUK MELIHAT DAFTAR DESAIN:',
     categories: ['Syukuran', 'Tema V.02'],
@@ -47,6 +49,7 @@ const defaultTemaBannerGroups = {
   },
   eksklusif: {
     name: 'Gambar 3 (Tema Eksklusif)',
+    image: '/assets/images/shopee-3.webp',
     title: 'Tema Eksklusif',
     sub: '',
     categories: ['Eksklusif'],
@@ -54,8 +57,31 @@ const defaultTemaBannerGroups = {
     subcategories: []
   }
 };
+const defaultPageThumbnails = {
+  home: {
+    name: 'Beranda ( / )',
+    title: 'Galipat Story — Satu undangan, awal cerita kalian.',
+    description: 'Undangan digital dibuatkan tim. Bebas revisi sampai hari H, aktif 1 tahun pasca acara.',
+    image: '/assets/images/hero_mockup_v3.webp'
+  },
+  tema: {
+    name: 'Katalog Tema ( /tema )',
+    title: 'Tema Undangan Web — Galipat Story',
+    description: 'Koleksi lengkap 830+ tema undangan digital web. Dibuatkan tim, bebas revisi sampai hari H, dan aktif 1 tahun pasca acara.',
+    image: '/assets/images/shopee-1.webp'
+  },
+  webInvitation: {
+    name: 'Web Invitation ( /web-invitation )',
+    title: 'Undangan Digital Web Pernikahan Online — Galipat Story',
+    description: 'Jasa pembuatan undangan digital web pernikahan online terima beres. Dibuatkan tim dalam 8-24 jam, bebas revisi sampai hari H, aktif 1 tahun pasca acara.',
+    image: '/assets/images/hero_mockup_v3.webp'
+  }
+};
+function escapeAttr(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 const settingsDb=path.join(root,'data/settings.json');
-let settings={previewMode:'new_tab',temaBannerGroups:defaultTemaBannerGroups};
+let settings={previewMode:'new_tab',temaBannerGroups:defaultTemaBannerGroups,pageThumbnails:defaultPageThumbnails};
 try{
   const loaded=JSON.parse(await fs.readFile(settingsDb,'utf8'));
   settings={
@@ -65,6 +91,11 @@ try{
       all: { ...defaultTemaBannerGroups.all, ...(loaded.temaBannerGroups?.all || {}) },
       v02: { ...defaultTemaBannerGroups.v02, ...(loaded.temaBannerGroups?.v02 || {}) },
       eksklusif: { ...defaultTemaBannerGroups.eksklusif, ...(loaded.temaBannerGroups?.eksklusif || {}) }
+    },
+    pageThumbnails: {
+      home: { ...defaultPageThumbnails.home, ...(loaded.pageThumbnails?.home || {}) },
+      tema: { ...defaultPageThumbnails.tema, ...(loaded.pageThumbnails?.tema || {}) },
+      webInvitation: { ...defaultPageThumbnails.webInvitation, ...(loaded.pageThumbnails?.webInvitation || {}) }
     }
   };
 }catch(e){if(e.code!=='ENOENT')throw e;await fs.writeFile(settingsDb,JSON.stringify(settings,null,2)).catch(()=>{});}
@@ -337,6 +368,9 @@ if(p==='/api/admin/settings'&&['POST','PUT'].includes(req.method)){
     if(b.temaBannerGroups&&typeof b.temaBannerGroups==='object'){
       next.temaBannerGroups=b.temaBannerGroups;
     }
+    if(b.pageThumbnails&&typeof b.pageThumbnails==='object'){
+      next.pageThumbnails=b.pageThumbnails;
+    }
     return next;
   });
   return send(res,200,settings);
@@ -360,6 +394,29 @@ if(p==='/'||p==='')targetPath='/index.html';
 else if(p==='/kamu'||p==='/kamu/')targetPath='/admin.html';
 else if(p==='/tema'||p==='/tema/')targetPath='/tema.html';
 else if(p==='/web-invitation'||p==='/web-invitation/')targetPath='/web-invitation.html';
-if(p==='/admin'||p==='/admin/'||p==='/admin.html'){res.writeHead(302,{'Location':'/','Cache-Control':'no-cache'});return res.end();}
-const file=path.resolve(publicDir,'.'+decodeURIComponent(targetPath));if(!file.startsWith(publicDir+path.sep))return send(res,403,{error:'Akses ditolak.'});try{const bytes=await fs.readFile(file);const ext=path.extname(file);let cacheHeader='no-cache';if(file.includes('admin')||p.includes('admin')||p.includes('kamu')){cacheHeader='no-cache, no-store, must-revalidate';}else if(p.startsWith('/assets/')||p.startsWith('/vendor/')||p.startsWith('/favicon')||['.webp','.png','.jpg','.jpeg','.svg','.ico','.woff2'].includes(ext)){cacheHeader='public, max-age=31536000, immutable';}else if(p.startsWith('/uploads/')){cacheHeader='public, max-age=2592000';}else if(ext==='.css'||ext==='.js'){cacheHeader='public, max-age=31536000, immutable';}res.writeHead(200,{'Content-Type':mime[ext]||'application/octet-stream','Cache-Control':cacheHeader});res.end(req.method==='HEAD'?undefined:bytes);}catch{if(!path.extname(targetPath)||path.extname(targetPath)==='.html'){res.writeHead(302,{'Location':'/','Cache-Control':'no-cache'});return res.end();}return send(res,404,{error:'Halaman tidak ditemukan.'});}
+if(p==='/admin'||p==='/admin/'||p==='/admin.html'){res.writeHead(302,{'Location':'/kamu','Content-Length':'0','Cache-Control':'no-cache'});return res.end();}
+const file=path.resolve(publicDir,'.'+decodeURIComponent(targetPath));if(!file.startsWith(publicDir+path.sep))return send(res,403,{error:'Akses ditolak.'});try{let bytes=await fs.readFile(file);const ext=path.extname(file);let cacheHeader='no-cache';if(file.includes('admin')||p.includes('admin')||p.includes('kamu')){cacheHeader='no-cache, no-store, must-revalidate';}else if(p.startsWith('/assets/')||p.startsWith('/vendor/')||p.startsWith('/favicon')||['.webp','.png','.jpg','.jpeg','.svg','.ico','.woff2'].includes(ext)){cacheHeader='public, max-age=31536000, immutable';}else if(p.startsWith('/uploads/')){cacheHeader='public, max-age=2592000';}else if(ext==='.css'||ext==='.js'){cacheHeader='public, max-age=31536000, immutable';}
+if(ext==='.html'&&['/index.html','/tema.html','/web-invitation.html'].includes(targetPath)){
+  let html=bytes.toString('utf8');
+  const pageKey=targetPath==='/index.html'?'home':(targetPath==='/tema.html'?'tema':'webInvitation');
+  const thumb=settings.pageThumbnails?.[pageKey]||defaultPageThumbnails[pageKey];
+  if(thumb){
+    const host=req.headers['x-forwarded-host']||req.headers.host||'lp.galipatstory.com';
+    const proto=req.headers['x-forwarded-proto']||(req.socket.encrypted?'https':'http');
+    const fullImg=thumb.image?.startsWith('http')?thumb.image:`${proto}://${host}${thumb.image?.startsWith('/')?'':'/'}${thumb.image||''}`;
+    const pageUrl=`${proto}://${host}${p===''?'/':p}`;
+    const metaTags=`<meta property="og:type" content="website">\n<meta property="og:url" content="${escapeAttr(pageUrl)}">\n<meta property="og:title" content="${escapeAttr(thumb.title)}">\n<meta property="og:description" content="${escapeAttr(thumb.description)}">\n<meta property="og:image" content="${escapeAttr(fullImg)}">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:title" content="${escapeAttr(thumb.title)}">\n<meta name="twitter:description" content="${escapeAttr(thumb.description)}">\n<meta name="twitter:image" content="${escapeAttr(fullImg)}">\n`;
+    html=html.replace(/<head>/i,`<head>\n${metaTags}`);
+  }
+  if(targetPath==='/tema.html'&&settings.temaBannerGroups){
+    const bAll=settings.temaBannerGroups.all?.image;
+    const bV02=settings.temaBannerGroups.v02?.image;
+    const bEks=settings.temaBannerGroups.eksklusif?.image;
+    if(bAll)html=html.replace('/assets/images/shopee-1.webp',bAll);
+    if(bV02)html=html.replace('/assets/images/shopee-2.webp',bV02);
+    if(bEks)html=html.replace('/assets/images/shopee-3.webp',bEks);
+  }
+  bytes=Buffer.from(html,'utf8');
+}
+res.writeHead(200,{'Content-Type':mime[ext]||'application/octet-stream','Cache-Control':cacheHeader});res.end(req.method==='HEAD'?undefined:bytes);}catch{if(!path.extname(targetPath)||path.extname(targetPath)==='.html'){res.writeHead(302,{'Location':'/','Cache-Control':'no-cache'});return res.end();}return send(res,404,{error:'Halaman tidak ditemukan.'});}
 }catch(e){send(res,400,{error:e.message||'Permintaan gagal.'});}}).listen(Number(process.env.PORT||4303),process.env.HOST||'127.0.0.1',()=>console.log('Galipat Story v.03: http://'+(process.env.HOST||'127.0.0.1')+':'+(process.env.PORT||4303)));

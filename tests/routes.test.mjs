@@ -52,25 +52,25 @@ test('routes /tema and /web-invitation serve respective landing pages', async ()
 
     const rAdmin = await fetch(`${base}/admin`, { redirect: 'manual' });
     assert.equal(rAdmin.status, 302);
-    assert.equal(rAdmin.headers.get('location'), '/');
+    assert.equal(rAdmin.headers.get('location'), '/kamu');
 
     const rAdminSlash = await fetch(`${base}/admin/`, { redirect: 'manual' });
     assert.equal(rAdminSlash.status, 302);
-    assert.equal(rAdminSlash.headers.get('location'), '/');
+    assert.equal(rAdminSlash.headers.get('location'), '/kamu');
 
     const rAdminHtml = await fetch(`${base}/admin.html`, { redirect: 'manual' });
     assert.equal(rAdminHtml.status, 302);
-    assert.equal(rAdminHtml.headers.get('location'), '/');
+    assert.equal(rAdminHtml.headers.get('location'), '/kamu');
 
     const rRandom = await fetch(`${base}/coba-halaman-acak`, { redirect: 'manual' });
     assert.equal(rRandom.status, 302);
     assert.equal(rRandom.headers.get('location'), '/');
 
-    // Follow redirect on /admin brings visitor to homepage
+    // Follow redirect on /admin brings visitor to admin panel
     const rAdminFollow = await fetch(`${base}/admin`);
     assert.equal(rAdminFollow.status, 200);
     const htmlAdminFollow = await rAdminFollow.text();
-    assert.ok(htmlAdminFollow.includes('Galipat Story'));
+    assert.ok(htmlAdminFollow.includes('RUANG KELOLA KATALOG'));
 
     // Check /tema and /tema/
     const rTema1 = await fetch(`${base}/tema`);

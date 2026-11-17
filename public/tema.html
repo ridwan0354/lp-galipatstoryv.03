@@ -320,7 +320,24 @@ function handleProductClick(type, shouldScroll = true) {
   }
 }
 
+function updateBannerImages() {
+  const groups = window.temaBannerGroups || defaultGroups;
+  if(groups.all?.image) {
+    const img1 = document.querySelector('#card-group-all img');
+    if(img1 && img1.getAttribute('src') !== groups.all.image) img1.src = groups.all.image;
+  }
+  if(groups.v02?.image) {
+    const img2 = document.querySelector('#card-group-v02 img');
+    if(img2 && img2.getAttribute('src') !== groups.v02.image) img2.src = groups.v02.image;
+  }
+  if(groups.eksklusif?.image) {
+    const img3 = document.querySelector('#card-group-eksklusif img');
+    if(img3 && img3.getAttribute('src') !== groups.eksklusif.image) img3.src = groups.eksklusif.image;
+  }
+}
+
 window.onTemaBannerGroupsLoaded = function() {
+  updateBannerImages();
   if(window.activeBannerType) {
     handleProductClick(window.activeBannerType, false);
   }

@@ -220,13 +220,186 @@ function renderSettings(){
   const mode=settings?.previewMode||'new_tab';
   const radio=$(`#settings-form input[name="previewMode"][value="${mode}"]`);
   if(radio)radio.checked=true;
+  renderPageThumbnailSettings();
   renderBannerSettings();
 }
 
+const PAGE_THUMBNAIL_DEFS = [
+  {
+    key: 'home',
+    path: '/',
+    label: 'Halaman Beranda',
+    badge: 'BERANDA ( / )',
+    defaultImage: '/assets/images/hero_mockup_v3.webp',
+    defaultTitle: 'Galipat Story — Satu undangan, awal cerita kalian.',
+    defaultDesc: 'Undangan digital dibuatkan tim. Bebas revisi sampai hari H, aktif 1 tahun pasca acara.'
+  },
+  {
+    key: 'tema',
+    path: '/tema',
+    label: 'Katalog Tema',
+    badge: 'KATALOG TEMA ( /TEMA )',
+    defaultImage: '/assets/images/shopee-1.webp',
+    defaultTitle: 'Tema Undangan Web — Galipat Story',
+    defaultDesc: 'Koleksi lengkap 830+ tema undangan digital web. Dibuatkan tim, bebas revisi sampai hari H, dan aktif 1 tahun pasca acara.'
+  },
+  {
+    key: 'webInvitation',
+    path: '/web-invitation',
+    label: 'Web Invitation',
+    badge: 'WEB INVITATION ( /WEB-INVITATION )',
+    defaultImage: '/assets/images/hero_mockup_v3.webp',
+    defaultTitle: 'Undangan Digital Web Pernikahan Online — Galipat Story',
+    defaultDesc: 'Jasa pembuatan undangan digital web pernikahan online terima beres. Dibuatkan tim dalam 8-24 jam, bebas revisi sampai hari H, aktif 1 tahun pasca acara.'
+  }
+];
+
+function renderPageThumbnailSettings(){
+  const container=$('#page-thumbnails-container');
+  if(!container)return;
+  const currentThumbs=settings?.pageThumbnails||{};
+
+  container.innerHTML=PAGE_THUMBNAIL_DEFS.map(pDef=>{
+    const pageData=currentThumbs[pDef.key]||{};
+    const image=pageData.image||pDef.defaultImage;
+    const title=pageData.title||pDef.defaultTitle;
+    const desc=pageData.description||pDef.defaultDesc;
+
+    return `
+      <div class="page-thumb-card" data-page="${pDef.key}">
+        <div class="page-thumb-header">
+          <h3 class="page-thumb-title">${escapeHtml(pDef.label)}</h3>
+          <span class="banner-badge">${escapeHtml(pDef.badge)}</span>
+        </div>
+
+        <div>
+          <label class="banner-field-label">Pratinjau Tampilan Link (WhatsApp / Sosmed):</label>
+          <div class="wa-preview-card">
+            <div class="wa-preview-header">
+              <span>💬 Pratinjau Link WhatsApp &amp; Sosmed</span>
+            </div>
+            <div class="wa-preview-img-wrap">
+              <img src="${escapeHtml(image)}" class="wa-preview-img" id="wa-img-${pDef.key}" alt="Preview ${escapeHtml(pDef.label)}">
+            </div>
+            <div class="wa-preview-body">
+              <div class="wa-preview-domain">LP.GALIPATSTORY.COM ${pDef.path}</div>
+              <div class="wa-preview-title" id="wa-title-${pDef.key}">${escapeHtml(title)}</div>
+              <div class="wa-preview-desc" id="wa-desc-${pDef.key}">${escapeHtml(desc)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="banner-field-label">Gambar Thumbnail Halaman:</label>
+          <div class="banner-img-preview-box">
+            <img src="${escapeHtml(image)}" class="banner-preview-thumb" id="page-thumb-preview-${pDef.key}" alt="Thumb ${escapeHtml(pDef.label)}">
+            <div class="banner-img-controls">
+              <input type="text" class="banner-input-sm page-thumb-img-input" id="page-thumb-img-${pDef.key}" data-page="${pDef.key}" value="${escapeHtml(image)}" placeholder="/assets/images/..." oninput="updateLiveWaThumb('${pDef.key}')">
+              <button type="button" class="button outline small" style="align-self:flex-start;font-size:12px;padding:5px 10px;" onclick="triggerPageThumbUpload('${pDef.key}')">📷 Ganti Thumbnail</button>
+              <input type="file" id="page-thumb-file-${pDef.key}" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handlePageThumbFileUpload('${pDef.key}', this)">
+              <small id="page-thumb-status-${pDef.key}" style="color:var(--green);font-size:11px;"></small>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="banner-field-label">Judul Share (WhatsApp / Sosmed):</label>
+          <input type="text" class="banner-input-sm page-thumb-title-input" id="page-thumb-title-${pDef.key}" data-page="${pDef.key}" value="${escapeHtml(title)}" placeholder="Judul pratinjau..." oninput="updateLiveWaTitle('${pDef.key}')">
+        </div>
+
+        <div>
+          <label class="banner-field-label">Deskripsi Singkat Share:</label>
+          <textarea class="banner-input-sm page-thumb-desc-input" id="page-thumb-desc-${pDef.key}" data-page="${pDef.key}" rows="2" placeholder="Deskripsi pratinjau..." style="resize:vertical;" oninput="updateLiveWaDesc('${pDef.key}')">${escapeHtml(desc)}</textarea>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.updateLiveWaThumb=function(pageKey){
+  const val=document.getElementById(`page-thumb-img-${pageKey}`)?.value||'';
+  const img=document.getElementById(`page-thumb-preview-${pageKey}`);
+  const waImg=document.getElementById(`wa-img-${pageKey}`);
+  if(img)img.src=val;
+  if(waImg)waImg.src=val;
+};
+
+window.updateLiveWaTitle=function(pageKey){
+  const val=document.getElementById(`page-thumb-title-${pageKey}`)?.value||'';
+  const titleEl=document.getElementById(`wa-title-${pageKey}`);
+  if(titleEl)titleEl.textContent=val;
+};
+
+window.updateLiveWaDesc=function(pageKey){
+  const val=document.getElementById(`page-thumb-desc-${pageKey}`)?.value||'';
+  const descEl=document.getElementById(`wa-desc-${pageKey}`);
+  if(descEl)descEl.textContent=val;
+};
+
+window.triggerPageThumbUpload=function(pageKey){
+  const fileInput=document.getElementById(`page-thumb-file-${pageKey}`);
+  if(fileInput)fileInput.click();
+};
+
+window.handlePageThumbFileUpload=async function(pageKey,fileInput){
+  const file=fileInput.files?.[0];
+  if(!file)return;
+  const statusEl=document.getElementById(`page-thumb-status-${pageKey}`);
+  if(statusEl)statusEl.textContent='Mengunggah…';
+  try{
+    const dataUrl=await new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload=()=>resolve(r.result);
+      r.onerror=reject;
+      r.readAsDataURL(file);
+    });
+    const {url}=await api('/api/upload','POST',{image:dataUrl});
+    const imgInput=document.getElementById(`page-thumb-img-${pageKey}`);
+    const previewImg=document.getElementById(`page-thumb-preview-${pageKey}`);
+    const waImg=document.getElementById(`wa-img-${pageKey}`);
+    if(imgInput)imgInput.value=url;
+    if(previewImg)previewImg.src=url;
+    if(waImg)waImg.src=url;
+    if(statusEl)statusEl.textContent='✓ Berhasil diunggah';
+    setTimeout(()=>{if(statusEl)statusEl.textContent='';},3000);
+  }catch(err){
+    if(statusEl)statusEl.textContent='Gagal: '+err.message;
+  }
+};
+
+window.triggerBannerUpload=function(bannerKey){
+  const fileInput=document.getElementById(`banner-file-${bannerKey}`);
+  if(fileInput)fileInput.click();
+};
+
+window.handleBannerFileUpload=async function(bannerKey,fileInput){
+  const file=fileInput.files?.[0];
+  if(!file)return;
+  const statusEl=document.getElementById(`banner-upload-status-${bannerKey}`);
+  if(statusEl)statusEl.textContent='Mengunggah…';
+  try{
+    const dataUrl=await new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload=()=>resolve(r.result);
+      r.onerror=reject;
+      r.readAsDataURL(file);
+    });
+    const {url}=await api('/api/upload','POST',{image:dataUrl});
+    const imgInput=document.getElementById(`banner-img-${bannerKey}`);
+    const previewImg=document.getElementById(`banner-thumb-img-${bannerKey}`);
+    if(imgInput)imgInput.value=url;
+    if(previewImg)previewImg.src=url;
+    if(statusEl)statusEl.textContent='✓ Berhasil diunggah';
+    setTimeout(()=>{if(statusEl)statusEl.textContent='';},3000);
+  }catch(err){
+    if(statusEl)statusEl.textContent='Gagal: '+err.message;
+  }
+};
+
 const BANNER_CONFIG_DEFS = [
-  { key: 'all', badge: 'GAMBAR 1 (MULAI 29K)', label: 'Gambar 1: Mulai 29K', defaultTitle: 'Pilih Tema Sesuai Karaktermu', defaultSub: 'TEKAN "TOMBOL DI BAWAH" UNTUK MELIHAT KATALOG UNDANGAN KAMI.' },
-  { key: 'v02', badge: 'GAMBAR 2 (MULAI 50K)', label: 'Gambar 2: Mulai 50K', defaultTitle: 'Pilih Kategori Tema', defaultSub: 'PILIH KATEGORI TEMA DI BAWAH UNTUK MELIHAT DAFTAR DESAIN:' },
-  { key: 'eksklusif', badge: 'GAMBAR 3 (EKSKLUSIF)', label: 'Gambar 3: Tema Eksklusif', defaultTitle: 'Tema Eksklusif', defaultSub: '' }
+  { key: 'all', badge: 'GAMBAR 1 (MULAI 29K)', label: 'Gambar 1: Mulai 29K', defaultImage: '/assets/images/shopee-1.webp', defaultTitle: 'Pilih Tema Sesuai Karaktermu', defaultSub: 'TEKAN "TOMBOL DI BAWAH" UNTUK MELIHAT KATALOG UNDANGAN KAMI.' },
+  { key: 'v02', badge: 'GAMBAR 2 (MULAI 50K)', label: 'Gambar 2: Mulai 50K', defaultImage: '/assets/images/shopee-2.webp', defaultTitle: 'Pilih Kategori Tema', defaultSub: 'PILIH KATEGORI TEMA DI BAWAH UNTUK MELIHAT DAFTAR DESAIN:' },
+  { key: 'eksklusif', badge: 'GAMBAR 3 (EKSKLUSIF)', label: 'Gambar 3: Tema Eksklusif', defaultImage: '/assets/images/shopee-3.webp', defaultTitle: 'Tema Eksklusif', defaultSub: '' }
 ];
 
 const V02_SUB_LIST = [
@@ -248,6 +421,7 @@ function renderBannerSettings(){
 
   container.innerHTML=BANNER_CONFIG_DEFS.map(bDef=>{
     const group=currentGroups[bDef.key]||{};
+    const image=group.image||bDef.defaultImage;
     const title=group.title!==undefined?group.title:bDef.defaultTitle;
     const sub=group.sub!==undefined?group.sub:bDef.defaultSub;
     const selectedCats=Array.isArray(group.categories)?group.categories:[];
@@ -259,6 +433,19 @@ function renderBannerSettings(){
         <div class="banner-group-header">
           <h3 class="banner-group-title">${escapeHtml(bDef.label)}</h3>
           <span class="banner-badge">${escapeHtml(bDef.badge)}</span>
+        </div>
+
+        <div>
+          <label class="banner-field-label">Gambar Banner (${escapeHtml(bDef.label)}):</label>
+          <div class="banner-img-preview-box">
+            <img src="${escapeHtml(image)}" class="banner-preview-thumb" id="banner-thumb-img-${bDef.key}" alt="Preview ${escapeHtml(bDef.label)}">
+            <div class="banner-img-controls">
+              <input type="text" class="banner-input-sm banner-img-input" id="banner-img-${bDef.key}" data-banner="${bDef.key}" value="${escapeHtml(image)}" placeholder="/assets/images/..." oninput="document.getElementById('banner-thumb-img-${bDef.key}').src=this.value">
+              <button type="button" class="button outline small" style="align-self:flex-start;font-size:12px;padding:5px 10px;" onclick="triggerBannerUpload('${bDef.key}')">📷 Ganti Gambar Banner</button>
+              <input type="file" id="banner-file-${bDef.key}" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="handleBannerFileUpload('${bDef.key}', this)">
+              <small id="banner-upload-status-${bDef.key}" style="color:var(--green);font-size:11px;"></small>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -1263,8 +1450,10 @@ if(bannerSettingsForm){
         const defCatSelect=$(`#banner-defcat-${bDef.key}`);
         const subCbs=Array.from(document.querySelectorAll(`.banner-subcat-cb[data-banner="${bDef.key}"]:checked`));
 
+        const imgInput=document.getElementById(`banner-img-${bDef.key}`);
         temaBannerGroups[bDef.key]={
           name:bDef.label,
+          image:imgInput?imgInput.value.trim():bDef.defaultImage,
           title:titleInput?titleInput.value.trim():bDef.defaultTitle,
           sub:subInput?subInput.value.trim():bDef.defaultSub,
           categories:catCbs.map(cb=>cb.value),
@@ -1277,6 +1466,44 @@ if(bannerSettingsForm){
       renderBannerSettings();
       if(msg){
         msg.textContent='✓ Pengaturan gambar & tema berhasil disimpan';
+        setTimeout(()=>{msg.textContent='';},3500);
+      }
+    }catch(err){
+      if(msg)msg.textContent='';
+      notice(err.message);
+    }finally{
+      btn.disabled=false;
+    }
+  };
+}
+
+const pageThumbnailsForm=$('#page-thumbnails-form');
+if(pageThumbnailsForm){
+  pageThumbnailsForm.onsubmit=async e=>{
+    e.preventDefault();
+    const btn=$('#save-page-thumbnails-btn');
+    const msg=$('#page-thumbnails-notice');
+    btn.disabled=true;
+    if(msg)msg.textContent='Menyimpan…';
+    try{
+      const pageThumbnails={};
+      PAGE_THUMBNAIL_DEFS.forEach(pDef=>{
+        const imgInput=document.getElementById(`page-thumb-img-${pDef.key}`);
+        const titleInput=document.getElementById(`page-thumb-title-${pDef.key}`);
+        const descInput=document.getElementById(`page-thumb-desc-${pDef.key}`);
+
+        pageThumbnails[pDef.key]={
+          name:pDef.label,
+          image:imgInput?imgInput.value.trim():pDef.defaultImage,
+          title:titleInput?titleInput.value.trim():pDef.defaultTitle,
+          description:descInput?descInput.value.trim():pDef.defaultDesc
+        };
+      });
+
+      settings=await api('/api/admin/settings','POST',{pageThumbnails});
+      renderPageThumbnailSettings();
+      if(msg){
+        msg.textContent='✓ Thumbnail sosial media berhasil disimpan';
         setTimeout(()=>{msg.textContent='';},3500);
       }
     }catch(err){

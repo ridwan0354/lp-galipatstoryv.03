@@ -46,6 +46,7 @@ test('settings API: get public settings, admin authentication, update and persis
     await fs.writeFile(path.join(dir, 'data/themes.json'), '[]');
     await fs.copyFile(new URL('../server.mjs', import.meta.url), path.join(dir, 'server.mjs'));
     await fs.copyFile(new URL('../preview.mjs', import.meta.url), path.join(dir, 'preview.mjs'));
+    await fs.copyFile(new URL('../public/index.html', import.meta.url), path.join(dir, 'public/index.html'));
 
     await start();
 
@@ -137,6 +138,45 @@ test('settings API: get public settings, admin authentication, update and persis
     const publicBannerRes = await (await api('/api/settings', 'GET', undefined, false)).json();
     assert.deepEqual(publicBannerRes.temaBannerGroups.all.categories, ['Premium', 'Floral']);
     assert.equal(publicBannerRes.temaBannerGroups.eksklusif.title, 'Tema Eksklusif VIP');
+
+    // 13. Update and persist pageThumbnails configuration
+    const customPageThumbnails = {
+      home: {
+        name: 'Beranda ( / )',
+        image: '/uploads/custom-home-thumb.webp',
+        title: 'Undangan Web Pernikahan Elegan — Galipat',
+        description: 'Pesan undangan web digital elegan terima beres.'
+      },
+      tema: {
+        name: 'Katalog Tema ( /tema )',
+        image: '/uploads/custom-tema-thumb.webp',
+        title: 'Pilihan 830+ Tema Undangan Galipat',
+        description: 'Lihat katalog terlengkap tema undangan web pernikahan.'
+      },
+      webInvitation: {
+        name: 'Web Invitation ( /web-invitation )',
+        image: '/uploads/custom-web-thumb.webp',
+        title: 'Jasa Pembuatan Web Invitation',
+        description: 'Siap dalam 8-24 jam beres.'
+      }
+    };
+    const updatePageThumbRes = await api('/api/admin/settings', 'POST', { pageThumbnails: customPageThumbnails });
+    assert.equal(updatePageThumbRes.status, 200);
+    const updatedPageThumbData = await updatePageThumbRes.json();
+    assert.equal(updatedPageThumbData.pageThumbnails.home.image, '/uploads/custom-home-thumb.webp');
+    assert.equal(updatedPageThumbData.pageThumbnails.tema.title, 'Pilihan 830+ Tema Undangan Galipat');
+
+    // 14. Verify disk persistence of pageThumbnails
+    const diskAfterThumb = JSON.parse(await fs.readFile(path.join(dir, 'data/settings.json'), 'utf8'));
+    assert.equal(diskAfterThumb.pageThumbnails.home.image, '/uploads/custom-home-thumb.webp');
+    assert.equal(diskAfterThumb.pageThumbnails.webInvitation.title, 'Jasa Pembuatan Web Invitation');
+
+    // 15. Verify public HTML responses have Open Graph meta tags injected
+    const homeHtmlRes = await fetch(`${base}/`);
+    assert.equal(homeHtmlRes.status, 200);
+    const homeHtml = await homeHtmlRes.text();
+    assert.ok(homeHtml.includes('<meta property="og:image" content="http://127.0.0.1:14306/uploads/custom-home-thumb.webp">'));
+    assert.ok(homeHtml.includes('<meta property="og:title" content="Undangan Web Pernikahan Elegan — Galipat">'));
   } finally {
     if (child?.exitCode === null) await stop();
     await fs.rm(dir, { recursive: true, force: true });
