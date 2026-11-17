@@ -39,3 +39,20 @@ test('preview injects styles to ensure elementor-invisible is visible and notSup
     assert.ok(html.includes('#notSupport{display:none!important}'));
   } finally { globalThis.fetch = originalFetch; }
 });
+
+test('preview proxies and rewrites cross-origin fonts to prevent CORS font blocking', async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (url) => {
+      if (String(url).includes('uaf.css')) {
+        return new Response("@font-face { font-family: 'garlicha'; src: url('/wp-content/uploads/useanyfont/3867garlicha.woff2') format('woff2'); }");
+      }
+      return new Response('<html><head><link rel="stylesheet" href="https://by.galipatstory.id/wp-content/uploads/useanyfont/uaf.css"><style>@font-face{font-family:iskry;src:url(\'https://by.galipatstory.id/wp-content/uploads/useanyfont/2359Iskry-regular.woff2\');}</style></head><body>Undangan</body></html>');
+    };
+    const html = await renderPreview({demo: 'https://by.galipatstory.id/te01/'}, false, { proxyOrigin: 'https://lp.galipatstory.com' });
+    assert.ok(html.includes('https://lp.galipatstory.com/api/font-proxy?url='));
+    assert.ok(html.includes('3867garlicha.woff2'));
+    assert.ok(html.includes('2359Iskry-regular.woff2'));
+    assert.ok(!html.includes("url('https://by.galipatstory.id/wp-content/uploads/useanyfont/2359Iskry-regular.woff2')"));
+  } finally { globalThis.fetch = originalFetch; }
+});

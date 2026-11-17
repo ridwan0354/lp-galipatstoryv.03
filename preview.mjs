@@ -1,7 +1,57 @@
 import {readFile} from 'node:fs/promises';
-const allowedHosts=new Set(['by.galipatstory.id','by.galipat-story.com','inv.galipat-story.com']);
+export const allowedHosts=new Set(['by.galipatstory.id','by.galipat-story.com','inv.galipat-story.com']);
 
 const templateFontCache = new Map();
+const uafCssCache = new Map();
+
+export async function proxyTemplateFonts(html, baseUrl, proxyOrigin = '') {
+  const origin = proxyOrigin ? proxyOrigin.replace(/\/+$/, '') : '';
+  const baseOrigin = new URL(baseUrl).origin;
+
+  // 1. If uaf.css is linked, fetch, rewrite font URLs inside it, and inline it
+  const uafLinkRegex = /<link\b[^>]*\bhref=(['"])(https?:\/\/[^'"]*\/useanyfont\/uaf\.css[^'"]*)\1[^>]*>/i;
+  const uafMatch = html.match(uafLinkRegex);
+  if (uafMatch) {
+    const uafUrl = uafMatch[2];
+    let css = uafCssCache.get(uafUrl);
+    if (!css) {
+      try {
+        const res = await fetch(uafUrl, { signal: AbortSignal.timeout(5000) });
+        if (res.ok) {
+          css = await res.text();
+          uafCssCache.set(uafUrl, css);
+        }
+      } catch {}
+    }
+    if (css) {
+      const rewrittenCss = css.replace(/url\((['"]?)([^'"\)]+\.(?:woff2?|ttf|otf|eot)[^'"\)]*)\1\)/gi, (match, q, rawUrl) => {
+        let absUrl = rawUrl;
+        try {
+          absUrl = new URL(rawUrl, uafUrl).href;
+        } catch {
+          return match;
+        }
+        return `url("${origin}/api/font-proxy?url=${encodeURIComponent(absUrl)}")`;
+      });
+      html = html.replace(uafMatch[0], `<style id="uaf_client_css-inlined">\n${rewrittenCss}\n</style>`);
+    }
+  }
+
+  // 2. Rewrite font URLs in html matching allowed hosts
+  const fontUrlRegex = /url\((['"]?)(https?:\/\/(?:by\.galipatstory\.id|by\.galipat-story\.com|inv\.galipat-story\.com)[^'"\)]+\.(?:woff2?|ttf|otf|eot)(?:\?[^'"\)]*)?)\1\)/gi;
+  html = html.replace(fontUrlRegex, (match, q, rawUrl) => {
+    return `url("${origin}/api/font-proxy?url=${encodeURIComponent(rawUrl)}")`;
+  });
+
+  // 3. Rewrite relative useanyfont URLs
+  const relFontUrlRegex = /url\((['"]?)(\/[^'"\)]*\/useanyfont\/[^'"\)]+\.(?:woff2?|ttf|otf|eot)[^'"\)]*)\1\)/gi;
+  html = html.replace(relFontUrlRegex, (match, q, relUrl) => {
+    const absUrl = baseOrigin + relUrl;
+    return `url("${origin}/api/font-proxy?url=${encodeURIComponent(absUrl)}")`;
+  });
+
+  return html;
+}
 
 async function inlineTemplateFonts(html, baseUrl) {
   const importRegex = /@import\s+url\((['"]?)([^'"\)]*\/fonts\/[^'"\)]+)\1\);?/gi;
@@ -66,7 +116,7 @@ async function inlineTemplateFonts(html, baseUrl) {
   return html;
 }
 
-export async function renderPreview(theme,photo){
+export async function renderPreview(theme,photo,options={}){
  const source=new URL(photo?theme.demoPhoto:theme.demo);
  if(source.protocol!=='https:'||!allowedHosts.has(source.hostname))throw Error('Preview ini memakai tautan langsung.');
  const response=await fetch(source,{signal:AbortSignal.timeout(15000),redirect:'error'});
@@ -102,6 +152,7 @@ export async function renderPreview(theme,photo){
  // Keep external templates isolated in an opaque sandbox; never grant same-origin privileges.
  html=html.replace(/<head[^>]*>/i,match=>match+`<base href="${source.href.replaceAll('&','&amp;').replaceAll('"','&quot;')}">`+adapter+fonts);
  html=await inlineTemplateFonts(html, source);
+ html=await proxyTemplateFonts(html, source, options.proxyOrigin);
  return html;
 }
 export function supportsPreview(url){try{return allowedHosts.has(new URL(url).hostname)}catch{return false}}

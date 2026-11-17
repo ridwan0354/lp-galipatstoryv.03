@@ -95,6 +95,17 @@ test('routes /tema and /web-invitation serve respective landing pages', async ()
 
     const rWeb2 = await fetch(`${base}/web-invitation/`);
     assert.equal(rWeb2.status, 200);
+
+    // Test /api/font-proxy CORS and security
+    const rFontEmpty = await fetch(`${base}/api/font-proxy`);
+    assert.equal(rFontEmpty.status, 400);
+
+    const rFontEvil = await fetch(`${base}/api/font-proxy?url=https://evil.example.com/test.woff2`);
+    assert.equal(rFontEvil.status, 403);
+
+    const rFontOptions = await fetch(`${base}/api/font-proxy?url=https://by.galipatstory.id/test.woff2`, { method: 'OPTIONS' });
+    assert.equal(rFontOptions.status, 204);
+    assert.equal(rFontOptions.headers.get('access-control-allow-origin'), '*');
   } finally {
     if (child?.exitCode === null) await stop();
     await fs.rm(dir, { recursive: true, force: true });

@@ -1,4 +1,4 @@
-import {renderPreview,supportsPreview} from './preview.mjs';
+import {renderPreview,supportsPreview,allowedHosts} from './preview.mjs';
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -194,16 +194,48 @@ function send(res,status,data){res.writeHead(status,{'Content-Type':'application
 async function body(req){let data='';for await(const c of req){data+=c;if(Buffer.byteLength(data)>5e6){throw Error('Ukuran data maksimal 5 MB.');}}return JSON.parse(data||'{}');}
 function validUrl(value,image=false){if(image&&/^\/(assets|uploads)\/[a-zA-Z0-9_./% ()-]+$/.test(value)&&!value.includes('..'))return true;try{return new URL(value).protocol==='https:'}catch{return false}}
 function validated(t){if(!t.name?.trim()||!t.category?.trim()||!validUrl(t.image,true)||!validUrl(t.demo)||(t.demoPhoto&&!validUrl(t.demoPhoto))||!Number.isInteger(t.price)||t.price<0||!Number.isInteger(t.photoPrice)||t.photoPrice<0)throw Error('Lengkapi nama, kategori, harga bulat positif, gambar dan tautan contoh HTTPS.');return {id:t.id,name:t.name.trim().slice(0,120),category:t.category.trim().slice(0,60),price:t.price,photoPrice:t.photoPrice,image:t.image,demo:t.demo,demoPhoto:String(t.demoPhoto||''),active:!!t.active,featured:!!t.featured,bestseller:!!(t.bestseller!==undefined?t.bestseller:t.featured),note:String(t.note||'').slice(0,500)};}
+const fontProxyCache=new Map();
 http.createServer(async(req,res)=>{try{
 const u=new URL(req.url,'http://localhost');const p=u.pathname;
 res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
 const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('gs_session='))?.slice(11);const logged=token&&sessions.get(token)>Date.now();
 if(p==='/go/tiktok'||p==='/go/tiktok/'){res.writeHead(302,{'Location':'https://www.tiktok.com/@galipat_story','Cache-Control':'no-cache'});return res.end();}
 if(p==='/go/instagram'||p==='/go/instagram/'){res.writeHead(302,{'Location':'https://www.instagram.com/galipat_story/','Cache-Control':'no-cache'});return res.end();}
+if(p==='/api/font-proxy'&&['GET','HEAD','OPTIONS'].includes(req.method)){
+res.setHeader('Access-Control-Allow-Origin','*');
+res.setHeader('Access-Control-Allow-Methods','GET, HEAD, OPTIONS');
+res.setHeader('Access-Control-Max-Age','86400');
+if(req.method==='OPTIONS'){res.writeHead(204);return res.end();}
+const targetUrl=u.searchParams.get('url');
+if(!targetUrl)return send(res,400,{error:'URL font tidak valid.'});
+let parsed;
+try{parsed=new URL(targetUrl);}catch{return send(res,400,{error:'URL tidak valid.'});}
+if(!['https:','http:'].includes(parsed.protocol)||!allowedHosts.has(parsed.hostname)){return send(res,403,{error:'Host font tidak diizinkan.'});}
+const ext=path.extname(parsed.pathname).toLowerCase();
+const fontMimes={'.woff2':'font/woff2','.woff':'font/woff','.ttf':'font/ttf','.otf':'font/otf','.eot':'application/vnd.ms-fontobject'};
+let cached=fontProxyCache.get(targetUrl);
+if(!cached){
+  try{
+    const fRes=await fetch(targetUrl,{signal:AbortSignal.timeout(10000)});
+    if(!fRes.ok)return send(res,502,{error:'Gagal mengunduh font.'});
+    const buf=Buffer.from(await fRes.arrayBuffer());
+    const mimeType=fontMimes[ext]||fRes.headers.get('content-type')||'application/octet-stream';
+    cached={buf,mime:mimeType};
+    fontProxyCache.set(targetUrl,cached);
+  }catch{
+    return send(res,502,{error:'Koneksi ke font gagal.'});
+  }
+}
+res.writeHead(200,{'Content-Type':cached.mime,'Access-Control-Allow-Origin':'*','Cache-Control':'public, max-age=31536000, immutable'});
+return res.end(req.method==='HEAD'?undefined:cached.buf);
+}
 if(p==='/invitation-preview'&&req.method==='GET'){
 const theme=themes.find(t=>t.active&&t.id===u.searchParams.get('theme'));const photo=u.searchParams.get('version')==='photo';
 if(!theme||!supportsPreview(photo?theme.demoPhoto:theme.demo))return send(res,404,{error:'Contoh tidak tersedia.'});
-try{const html=await renderPreview(theme,photo);res.removeHeader('X-Frame-Options');res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"sandbox allow-scripts allow-popups allow-same-origin allow-forms"});return res.end(html);}catch{return send(res,502,{error:'Contoh sedang tidak dapat dimuat. Silakan coba lagi.'});}
+const host=String(req.headers['x-forwarded-host']||req.headers.host||'lp.galipatstory.com');
+const proto=String(req.headers['x-forwarded-proto']||(req.socket.encrypted?'https':(host.includes('localhost')||host.includes('127.0.0.1')?'http':'https')));
+const proxyOrigin=`${proto}://${host}`;
+try{const html=await renderPreview(theme,photo,{proxyOrigin});res.removeHeader('X-Frame-Options');res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"sandbox allow-scripts allow-popups allow-same-origin allow-forms"});return res.end(html);}catch{return send(res,502,{error:'Contoh sedang tidak dapat dimuat. Silakan coba lagi.'});}
 }
 if(p.startsWith('/api/')){
 if((p==='/api/catatan'||p==='/api/track')&&req.method==='POST'){
