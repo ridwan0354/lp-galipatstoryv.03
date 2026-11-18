@@ -11,9 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.youtube-nocookie.com">
   <link rel="preconnect" href="https://i.ytimg.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap">
   <link rel="preload" as="image" href="/assets/images/brand-logo.webp" type="image/webp" fetchpriority="high">
-  <link rel="stylesheet" href="/style.css?v=3.4.0">
+  <link rel="stylesheet" href="/style.css?v=3.4.1">
 
   <style>
     /* =========================================================
@@ -22,13 +22,17 @@
     :root {
       --tut-border: #364349;
       --tut-radius: 9px;
-      --tut-green: #2d4739;
-      --tut-green-dark: #1f3328;
+      --tut-green: #23483e;
+      --tut-green-dark: #19362e;
+      --paper: #f7f6f2;
+      --ink: #1f2b23;
+      --muted: #667068;
+      --line: #e2e8df;
     }
 
     body.tutorial-body {
-      background-color: #ffffff;
-      color: #364349;
+      background-color: var(--paper);
+      color: var(--ink);
       font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
       padding: 0;
@@ -39,7 +43,7 @@
       width: 100%;
       max-width: 1060px;
       margin: 0 auto;
-      padding: 24px 20px 60px;
+      padding: 32px 20px 48px;
       box-sizing: border-box;
     }
 
@@ -51,7 +55,7 @@
 
     .tut-main-title {
       font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-      font-size: clamp(24px, 4vw, 32px);
+      font-size: clamp(24px, 4vw, 34px);
       font-weight: 700;
       color: #364349;
       margin: 0 0 8px;
@@ -64,7 +68,7 @@
       color: #64748b;
       margin: 0 auto;
       max-width: 600px;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     /* Filter Pills */
@@ -197,55 +201,228 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 24px;
-      margin-bottom: 40px;
+      margin-bottom: 32px;
     }
 
-    /* Bottom Help Banner */
-    .tut-help-banner {
-      border: 2px dashed #cbd5e1;
-      border-radius: var(--tut-radius);
-      padding: 24px;
+    /* Closing Section (Persis lp.galipatstory.com) */
+    .closing {
+      padding: 64px 24px;
+      background: var(--tut-green);
+      color: #f7f5ed;
+      border-radius: 12px;
       text-align: center;
-      background: #f8fafc;
-      margin-top: 20px;
+      margin: 20px auto 48px;
     }
 
-    .tut-help-banner h3 {
-      font-size: 18px;
+    .closing .eyebrow {
+      font-size: 10px;
+      letter-spacing: 2px;
       font-weight: 700;
-      color: #364349;
-      margin: 0 0 6px;
+      margin: 0 0 20px;
+      color: #bdcbaa;
     }
 
-    .tut-help-banner p {
-      font-size: 14px;
-      color: #64748b;
-      margin: 0 0 16px;
+    .closing h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(30px, 3.2vw, 44px);
+      font-weight: 400;
+      letter-spacing: -1.5px;
+      line-height: 1.2;
+      color: #ffffff;
+      margin: 0 0 24px;
     }
 
-    .tut-help-banner .tut-btn-cta {
+    .closing em {
+      color: #bdcbaa;
+      font-style: italic;
+    }
+
+    .closing .button.light {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: var(--tut-green);
-      color: #ffffff;
-      padding: 10px 22px;
-      border-radius: 999px;
-      text-decoration: none;
+      justify-content: center;
+      gap: 20px;
+      min-height: 52px;
+      padding: 14px 28px;
+      background: #eef1e4;
+      color: var(--tut-green);
+      border: 1px solid #eef1e4;
+      border-radius: 6px;
       font-weight: 600;
       font-size: 14px;
+      text-decoration: none;
       transition: background 0.2s ease, transform 0.15s ease;
     }
 
-    .tut-help-banner .tut-btn-cta:hover {
-      background: var(--tut-green-dark);
+    .closing .button.light:hover {
+      background: #ffffff;
       transform: translateY(-1px);
+    }
+
+    .closing > p:last-child {
+      font-size: 12.5px;
+      color: #c7d3c2;
+      margin-top: 20px;
+      margin-bottom: 0;
+    }
+
+    .closing a.wa {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+
+    /* Site Footer (Persis lp.galipatstory.com) */
+    footer.site-footer {
+      background: var(--paper);
+      border-top: 1px solid var(--line);
+      padding: 56px 0 40px;
+      font-size: 13px;
+    }
+
+    .site-footer .footer-inner {
+      display: grid;
+      grid-template-columns: 1.2fr 1.3fr 1fr;
+      gap: 36px;
+      align-items: start;
+    }
+
+    .site-footer .footer-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .site-footer .footer-brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--tut-green);
+    }
+
+    .site-footer .footer-address {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .site-footer .footer-icon {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--tut-green);
+    }
+
+    .site-footer .footer-col-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--tut-green);
+    }
+
+    .site-footer .footer-hours-card {
+      background: #ffffff;
+      border: 1px solid #dce3d6;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(35, 72, 62, 0.04);
+    }
+
+    .site-footer .footer-hours-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .site-footer .footer-hours-days {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .site-footer .footer-hours-time {
+      color: var(--tut-green);
+      font-weight: 700;
+      font-size: 13.5px;
+    }
+
+    .site-footer .footer-hours-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #1e7039;
+      background: #edf7ef;
+      border: 1px solid #cce8d3;
+      padding: 4px 8px;
+      border-radius: 6px;
+      width: fit-content;
+    }
+
+    .site-footer .badge-dot-live {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #25a244;
+      box-shadow: 0 0 0 2px rgba(37, 162, 68, 0.25);
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    .site-footer .footer-social-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .site-footer .footer-social-btn {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      background: #ffffff;
+      border: 1px solid #dce3d6;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(18, 42, 34, 0.03);
+      text-decoration: none;
+    }
+
+    .site-footer .footer-social-btn:hover {
+      background: var(--tut-green);
+      color: #ffffff;
+      border-color: var(--tut-green);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(35, 72, 62, 0.12);
+    }
+
+    .site-footer .footer-copyright {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
     }
 
     /* Responsive */
     @media (max-width: 768px) {
       .tut-wrap {
-        padding: 16px 14px 40px;
+        padding: 20px 14px 40px;
       }
       .tut-main-header {
         margin: 8px 0 20px;
@@ -271,6 +448,36 @@
       }
       .tut-box-foot {
         font-size: 12px;
+      }
+      .closing {
+        border-radius: 0;
+        padding: 45px 20px;
+      }
+      .closing h2 {
+        font-size: 32px;
+      }
+      footer.site-footer {
+        padding: 36px 0 calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .site-footer .footer-inner {
+        grid-template-columns: 1fr;
+        gap: 22px;
+      }
+      .site-footer .footer-brand-title {
+        font-size: 15px;
+      }
+      .site-footer .footer-hours-card {
+        padding: 10px 12px;
+      }
+      .site-footer .footer-hours-row {
+        font-size: 12.5px;
+      }
+      .site-footer .footer-hours-time {
+        font-size: 13px;
+      }
+      .site-footer .footer-social-btn {
+        padding: 7px 12px;
+        font-size: 11.5px;
       }
     }
   </style>
@@ -437,31 +644,21 @@
         </div>
       </section>
     </div>
-
-    <!-- Help Banner -->
-    <div class="tut-help-banner">
-      <h3>Butuh panduan langsung dari tim admin?</h3>
-      <p>Customer support Galipat Story siap membantu kalian jika ada kendala saat mengisi atau menyebarkan undangan.</p>
-      <a class="tut-btn-cta wa" data-location="tutorial-bottom-cta" href="#">
-        <span>Chat Admin via WhatsApp</span>
-        <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 9.5L9.5 2.5M9.5 2.5H4.5M9.5 2.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-      </a>
-    </div>
   </div>
+
+  <!-- Closing Section (Sama Persis lp.galipatstory.com) -->
+  <section class="closing wrap reveal-scale">
+    <p class="eyebrow">MULAI DARI SATU PILIHAN</p>
+    <h2>Kabar bahagia kalian<br>layak dibagikan <em>dengan indah.</em></h2>
+    <a href="/tema/" class="button light">Pilih undangan kalian ↓</a>
+    <p>Atau <a class="wa" data-location="closing" href="#">cerita dulu ke admin ↗</a></p>
+  </section>
 </main>
 
-<!-- Bottom Mobile Floating Bar -->
-<div class="mobile-buy">
-  <a href="/web-invitation/">Lihat Tema</a>
-  <a class="button wa" data-location="mobile-bar" href="#">
-    Konsultasi WhatsApp 
-    <svg class="arrow-icon" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 9.5L9.5 2.5M9.5 2.5H4.5M9.5 2.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-  </a>
-</div>
-
-<!-- Site Footer -->
+<!-- Site Footer (Sama Persis lp.galipatstory.com) -->
 <footer class="site-footer">
   <div class="wrap footer-inner">
+    <!-- Col 1: Brand & Office -->
     <div class="footer-col footer-brand-col">
       <div class="footer-brand-title">
         <strong>CV. Galipat Story Digital</strong>
@@ -471,36 +668,55 @@
         <span>BTN Royal Madinah, Kuranji, Labuapi<br>Lombok Barat, NTB 83361</span>
       </p>
     </div>
-    <div class="footer-col footer-menu-col">
-      <div class="footer-col-title">Navigasi Cepat</div>
-      <ul class="footer-links-list">
-        <li><a href="/">Beranda</a></li>
-        <li><a href="/web-invitation/">Web Invitation</a></li>
-        <li><a href="/tema/">Katalog Tema</a></li>
-        <li><a href="/tutorial">Tutorial</a></li>
-        <li><a href="/#faq">Tanya Jawab (FAQ)</a></li>
-      </ul>
-    </div>
-    <div class="footer-col footer-legal-col">
-      <div class="footer-col-title">Legalitas & Layanan</div>
-      <p class="footer-legal-badge">
-        <span class="legal-badge-pill">Resmi Terdaftar</span>
-        <span>Akta Notaris & NIB Berizin</span>
-      </p>
-      <div class="footer-wa-direct">
-        <a class="button small outline wa" data-location="footer" href="#">
-          Hubungi Admin Resmi
-          <svg class="arrow-icon" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 9.5L9.5 2.5M9.5 2.5H4.5M9.5 2.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-        </a>
+
+    <!-- Col 2: Jam Operasional -->
+    <div class="footer-col footer-hours-col">
+      <div class="footer-col-header">
+        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <strong>Jam Operasional Layanan</strong>
+      </div>
+      <div class="footer-hours-card">
+        <div class="footer-hours-row">
+          <span class="footer-hours-days">Senin – Minggu</span>
+          <strong class="footer-hours-time">07.00 – 23.00 WIB</strong>
+        </div>
+        <div class="footer-hours-badge">
+          <span class="badge-dot-live"></span>
+          <span>Buka Setiap Hari (Termasuk Hari Libur)</span>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="footer-bottom">
-    <div class="wrap footer-bottom-inner">
-      <p class="footer-copy">© 2026 Galipat Story. All rights reserved.</p>
+
+    <!-- Col 3: Social & Copyright -->
+    <div class="footer-col footer-social-col">
+      <div class="footer-col-header">
+        <strong>Media Sosial Resmi</strong>
+      </div>
+      <div class="footer-social-links">
+        <a href="/go/instagram" target="_blank" rel="noopener noreferrer" class="footer-social-btn" title="Instagram @galipat_story">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07c-1.28.06-2.15.26-2.91.56-.78.3-1.45.71-2.11 1.37-.66.66-1.07 1.33-1.38 2.11-.3.76-.5 1.63-.56 2.91C.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.28.26 2.15.56 2.91.3.78.71 1.45 1.38 2.11.66.66 1.33 1.07 2.11 1.38.76.3 1.63.5 2.91.56 1.28.06 1.69.07 4.95.07s3.67-.01 4.95-.07c1.28-.06 2.15-.26 2.91-.56.78-.3 1.45-.71 2.11-1.37-.76-.3-1.63-.5-2.91-.56C15.67.01 15.26 0 12 0zM12 5.84A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.4-10.8a1.44 1.44 0 1 0 1.44 1.44 1.44 1.44 0 0 0-1.44-1.44z"/></svg>
+          <span>Instagram</span>
+          <span class="social-arrow">↗</span>
+        </a>
+        <a href="/go/tiktok" target="_blank" rel="noopener noreferrer" class="footer-social-btn" title="TikTok @galipat_story">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z"/></svg>
+          <span>TikTok</span>
+          <span class="social-arrow">↗</span>
+        </a>
+      </div>
+      <span class="footer-copyright">© CV. Galipat Story Digital · Hak Cipta Dilindungi</span>
     </div>
   </div>
 </footer>
+
+<!-- Bottom Mobile Floating Bar -->
+<div class="mobile-buy">
+  <a href="/tema/">Lihat tema</a>
+  <a class="button wa" data-location="mobile-bar" href="#">
+    Konsultasi WhatsApp 
+    <svg class="arrow-icon" viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2.5 9.5L9.5 2.5M9.5 2.5H4.5M9.5 2.5V7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+  </a>
+</div>
 
 <script>
   (function(){
