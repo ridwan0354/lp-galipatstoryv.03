@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://i.ytimg.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap">
   <link rel="preload" as="image" href="/assets/images/brand-logo.webp" type="image/webp" fetchpriority="high">
-  <link rel="stylesheet" href="/style.css?v=3.4.1">
+  <link rel="stylesheet" href="/style.css?v=3.4.2">
 
   <style>
     /* =========================================================
@@ -43,7 +43,7 @@
       width: 100%;
       max-width: 1060px;
       margin: 0 auto;
-      padding: 32px 20px 48px;
+      padding: 24px 20px 16px;
       box-sizing: border-box;
     }
 
@@ -201,81 +201,14 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 24px;
-      margin-bottom: 32px;
-    }
-
-    /* Closing Section (Persis lp.galipatstory.com) */
-    .closing {
-      padding: 64px 24px;
-      background: var(--tut-green);
-      color: #f7f5ed;
-      border-radius: 12px;
-      text-align: center;
-      margin: 20px auto 48px;
-    }
-
-    .closing .eyebrow {
-      font-size: 10px;
-      letter-spacing: 2px;
-      font-weight: 700;
-      margin: 0 0 20px;
-      color: #bdcbaa;
-    }
-
-    .closing h2 {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(30px, 3.2vw, 44px);
-      font-weight: 400;
-      letter-spacing: -1.5px;
-      line-height: 1.2;
-      color: #ffffff;
-      margin: 0 0 24px;
-    }
-
-    .closing em {
-      color: #bdcbaa;
-      font-style: italic;
-    }
-
-    .closing .button.light {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      min-height: 52px;
-      padding: 14px 28px;
-      background: #eef1e4;
-      color: var(--tut-green);
-      border: 1px solid #eef1e4;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 14px;
-      text-decoration: none;
-      transition: background 0.2s ease, transform 0.15s ease;
-    }
-
-    .closing .button.light:hover {
-      background: #ffffff;
-      transform: translateY(-1px);
-    }
-
-    .closing > p:last-child {
-      font-size: 12.5px;
-      color: #c7d3c2;
-      margin-top: 20px;
-      margin-bottom: 0;
-    }
-
-    .closing a.wa {
-      color: #ffffff;
-      text-decoration: underline;
+      margin-bottom: 16px;
     }
 
     /* Site Footer (Persis lp.galipatstory.com) */
     footer.site-footer {
       background: var(--paper);
       border-top: 1px solid var(--line);
-      padding: 56px 0 40px;
+      padding: 40px 0 36px;
       font-size: 13px;
     }
 
@@ -422,7 +355,7 @@
     /* Responsive */
     @media (max-width: 768px) {
       .tut-wrap {
-        padding: 20px 14px 40px;
+        padding: 16px 14px 16px;
       }
       .tut-main-header {
         margin: 8px 0 20px;
@@ -441,6 +374,7 @@
       .tut-grid {
         grid-template-columns: 1fr;
         gap: 16px;
+        margin-bottom: 8px;
       }
       .tut-filter-btn {
         padding: 6px 14px;
@@ -449,15 +383,8 @@
       .tut-box-foot {
         font-size: 12px;
       }
-      .closing {
-        border-radius: 0;
-        padding: 45px 20px;
-      }
-      .closing h2 {
-        font-size: 32px;
-      }
       footer.site-footer {
-        padding: 36px 0 calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+        padding: 28px 0 calc(84px + env(safe-area-inset-bottom, 0px)) !important;
       }
       .site-footer .footer-inner {
         grid-template-columns: 1fr;
@@ -645,14 +572,6 @@
       </section>
     </div>
   </div>
-
-  <!-- Closing Section (Sama Persis lp.galipatstory.com) -->
-  <section class="closing wrap reveal-scale">
-    <p class="eyebrow">MULAI DARI SATU PILIHAN</p>
-    <h2>Kabar bahagia kalian<br>layak dibagikan <em>dengan indah.</em></h2>
-    <a href="/tema/" class="button light">Pilih undangan kalian ↓</a>
-    <p>Atau <a class="wa" data-location="closing" href="#">cerita dulu ke admin ↗</a></p>
-  </section>
 </main>
 
 <!-- Site Footer (Sama Persis lp.galipatstory.com) -->
