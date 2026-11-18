@@ -93,24 +93,41 @@
           </div>
         </div>
 
-        <!-- STEP 1: Month Period Selector (Bulan Ini vs 1 Bulan Lewat) -->
+        <!-- STEP 1: Period & Date Range Selector -->
         <div class="analytics-control-grid">
           <div class="analytics-month-bar">
             <div class="analytics-month-info">
-              <span class="month-label-eyebrow">1. PILIH PERIODE BULAN:</span>
+              <span class="month-label-eyebrow">1. PILIH PERIODE WAKTU &amp; TANGGAL:</span>
               <strong id="analytics-month-title">Bulan Ini</strong>
-              <small class="month-retention-text">Tersedia Bulan Ini &amp; 1 Bulan Lewat (data > 2 bulan otomatis dihapus)</small>
+              <small class="month-retention-text" id="analytics-period-hint">Pilih cepat: Hari Ini, Kemarin, 7 Hari Terakhir, Bulan Ini, atau tentukan rentang tanggal kustom.</small>
             </div>
-            <div class="analytics-month-pills" id="analytics-month-pills" role="radiogroup" aria-label="Pilih periode bulan"></div>
+            <div class="analytics-month-pills" id="analytics-month-pills" role="radiogroup" aria-label="Pilih periode waktu"></div>
+
+            <!-- Custom Date Range Form (Pilih Tanggal dari berapa ke berapa) -->
+            <div class="analytics-custom-range" id="analytics-custom-range" hidden>
+              <div class="custom-range-row">
+                <div class="custom-range-field">
+                  <span class="custom-range-lbl">Dari Tanggal:</span>
+                  <input type="date" id="range-start-date" class="custom-date-input">
+                </div>
+                <span class="custom-range-sep">s/d</span>
+                <div class="custom-range-field">
+                  <span class="custom-range-lbl">Sampai Tanggal:</span>
+                  <input type="date" id="range-end-date" class="custom-date-input">
+                </div>
+                <button type="button" id="apply-custom-range" class="button small">Terapkan Rentang Tanggal</button>
+              </div>
+            </div>
           </div>
 
           <div class="analytics-page-selector-box">
             <span class="month-label-eyebrow">2. FILTER HALAMAN WEBSITE:</span>
             <div class="analytics-tabs-bar" role="tablist" aria-label="Pilih halaman untuk rincian analitik">
-              <button type="button" class="analytics-tab active" data-page="all">🌐 Gabungan (3 Halaman)</button>
+              <button type="button" class="analytics-tab active" data-page="all">🌐 Gabungan</button>
               <button type="button" class="analytics-tab" data-page="home">🏠 Utama (/)</button>
               <button type="button" class="analytics-tab" data-page="web">💌 Web Invitation</button>
               <button type="button" class="analytics-tab" data-page="tema">🎨 Katalog (/tema)</button>
+              <button type="button" class="analytics-tab" data-page="tutorial">📖 Tutorial</button>
             </div>
           </div>
         </div>
@@ -191,19 +208,47 @@
         <!-- SECTION A: AUDIENCE (REGION, DEVICE, TRAFFIC SOURCE) -->
         <div class="analytics-sec-group" data-sec-group="audience">
           <div class="analytics-two-col">
-            <!-- Region / Wilayah -->
-            <div class="analytics-subcard">
+            <!-- Region / Provinsi -->
+            <div class="analytics-subcard" id="analytics-prov-subcard">
               <div class="subcard-title-row">
                 <div>
-                  <h3>📍 Sebaran Wilayah / Kota Pengunjung</h3>
-                  <small>Deteksi otomatis dari jaringan IP &amp; zona waktu tanpa meminta GPS</small>
+                  <h3 id="analytics-prov-heading">📍 Sebaran Provinsi Pengunjung</h3>
+                  <small id="analytics-prov-sub">Dikelompokkan otomatis per provinsi Indonesia &amp; zona waktu</small>
+                </div>
+                <div class="prov-header-actions">
+                  <div class="prov-view-toggle" role="group" aria-label="Mode Tampilan">
+                    <button type="button" id="toggle-view-prov" class="view-toggle-btn active" title="Tampilkan rekap per Provinsi">Per Provinsi</button>
+                    <button type="button" id="toggle-view-city" class="view-toggle-btn" title="Tampilkan rincian Kota">Rincian Kota</button>
+                  </div>
                 </div>
               </div>
+
+              <!-- Filter Harian / Tanggal Provinsi -->
+              <div class="prov-filter-bar">
+                <div class="prov-filter-left">
+                  <span class="prov-filter-label">Filter Tanggal:</span>
+                  <div class="prov-filter-pills" id="prov-filter-pills">
+                    <button type="button" class="prov-pill-btn active" data-prov-date="all">Semua Sesuai Periode</button>
+                    <button type="button" class="prov-pill-btn" data-prov-date="today">Hari Ini</button>
+                    <button type="button" class="prov-pill-btn" data-prov-date="yesterday">Kemarin</button>
+                    <button type="button" class="prov-pill-btn" data-prov-date="7days">7 Hari Terakhir</button>
+                  </div>
+                </div>
+                <div class="prov-filter-right">
+                  <label class="prov-select-label">
+                    <span>Pilih Hari:</span>
+                    <select id="prov-date-select" class="prov-date-select">
+                      <option value="all">-- Semua Tanggal --</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
               <div class="analytics-table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>Wilayah / Kota (Zona Waktu)</th>
+                      <th id="th-prov-col">Provinsi (Zona Waktu)</th>
                       <th>Pengunjung Unik</th>
                       <th>Total Buka</th>
                       <th>Klik WA</th>

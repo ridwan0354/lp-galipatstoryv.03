@@ -270,6 +270,8 @@ test('tracks region, device/HP model, traffic source, theme previews, and catego
   assert.equal(all.uniquePreviewers, 2);
   assert.equal(all.regions.length, 2);
   assert.ok(all.regions.some(r => r.region.includes('Bandung, Jawa Barat (WIB)') && r.uniqueWaClickers === 1));
+  assert.ok(all.provinces && all.provinces.length > 0, 'Must include provinces summary');
+  assert.ok(all.provinces.some(p => p.province === 'Jawa Barat' && p.uniqueVisitors >= 1));
   assert.ok(all.devices.some(d => d.device.includes('iPhone Pro Max / Plus') && d.osType === 'iOS'));
   assert.ok(all.devices.some(d => d.device.includes('Samsung Galaxy A Series (SM-A546E)') && d.osType === 'Android'));
   assert.ok(all.sources.some(s => s.source.includes('Iklan Instagram')));

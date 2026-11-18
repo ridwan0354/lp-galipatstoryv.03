@@ -1,5 +1,6 @@
 const $=s=>document.querySelector(s);
 let themes=[],categories=[],settings={previewMode:'new_tab'},analyticsData=null,activeAnalyticsPage='all',selectedMonthKey='',activeMainTab='catalog',activeSecFilter='all',limit=40;
+let selectedPeriod='this_month',customStartDate='',customEndDate='',selectedProvDate='all',provViewMode='prov';
 const form=$('#theme-form'),dialog=$('#editor'),catDialog=$('#category-dialog'),catForm=$('#category-form');
 
 async function api(url,method='GET',data){
@@ -251,6 +252,15 @@ const PAGE_THUMBNAIL_DEFS = [
     defaultImage: '/assets/images/hero_mockup_v3.webp',
     defaultTitle: 'Undangan Digital Web Pernikahan Online — Galipat Story',
     defaultDesc: 'Jasa pembuatan undangan digital web pernikahan online terima beres. Dibuatkan tim dalam 8-24 jam, bebas revisi sampai hari H, aktif 1 tahun pasca acara.'
+  },
+  {
+    key: 'tutorial',
+    path: '/tutorial',
+    label: 'Tutorial',
+    badge: 'TUTORIAL ( /TUTORIAL )',
+    defaultImage: '/assets/images/hero_mockup_v3.webp',
+    defaultTitle: 'Tutorial Undangan Website — Galipat Story',
+    defaultDesc: 'Panduan dan video tutorial resmi Galipat Story: scan QR barcode buku tamu, ganti nama tamu undangan, edit data mandiri, dan ganti template pesan WhatsApp.'
   }
 ];
 
@@ -651,6 +661,265 @@ function renderMiniBar(pct){
   return wrap;
 }
 
+function extractProvince(raw=''){
+  const s=String(raw||'').toLowerCase().trim();
+  if(!s)return 'Tidak Diketahui';
+  if(s.startsWith('wilayah wita')||s.includes('wilayah wita'))return 'Wilayah WITA (Bali, NTB, NTT, Kalimantan, Sulawesi)';
+  if(s.startsWith('wilayah wit')||s.includes('wilayah wit'))return 'Wilayah WIT (Maluku, Papua)';
+  if(s.startsWith('wilayah wib')||s.includes('wilayah wib'))return 'Wilayah WIB (Jawa, Sumatera, Kalbar)';
+  if(s.includes('jakarta'))return 'DKI Jakarta';
+  if(s.includes('west java')||s.includes('jawa barat')||s.includes('bandung')||s.includes('bekasi')||s.includes('depok')||s.includes('bogor')||s.includes('cimahi')||s.includes('cirebon')||s.includes('karawang')||s.includes('tasikmalaya')||s.includes('sukabumi'))return 'Jawa Barat';
+  if(s.includes('east java')||s.includes('jawa timur')||s.includes('surabaya')||s.includes('malang')||s.includes('sidoarjo')||s.includes('jember')||s.includes('kediri')||s.includes('banyuwangi')||s.includes('pasuruan')||s.includes('probolinggo')||s.includes('gresik'))return 'Jawa Timur';
+  if(s.includes('central java')||s.includes('jawa tengah')||s.includes('semarang')||s.includes('surakarta')||s.includes('solo')||s.includes('magelang')||s.includes('pekalongan')||s.includes('tegal')||s.includes('kudus')||s.includes('cilacap')||s.includes('banyumas')||s.includes('purwokerto')||s.includes('salatiga'))return 'Jawa Tengah';
+  if(s.includes('banten')||s.includes('tangerang')||s.includes('serang')||s.includes('cilegon'))return 'Banten';
+  if(s.includes('yogyakarta')||s.includes('jogja')||s.includes('sleman')||s.includes('bantul'))return 'DI Yogyakarta';
+  if(s.includes('north sumatra')||s.includes('sumatera utara')||s.includes('medan')||s.includes('deli serdang')||s.includes('binjai')||s.includes('pematangsiantar'))return 'Sumatera Utara';
+  if(s.includes('west sumatra')||s.includes('sumatera barat')||s.includes('padang')||s.includes('bukittinggi'))return 'Sumatera Barat';
+  if(s.includes('south sumatra')||s.includes('sumatera selatan')||s.includes('palembang')||s.includes('prabumulih'))return 'Sumatera Selatan';
+  if(s.includes('riau islands')||s.includes('kepulauan riau')||s.includes('batam')||s.includes('tanjungpinang'))return 'Kepulauan Riau';
+  if(s.includes('riau')||s.includes('pekanbaru')||s.includes('dumai'))return 'Riau';
+  if(s.includes('lampung')||s.includes('bandar lampung'))return 'Lampung';
+  if(s.includes('aceh')||s.includes('banda aceh'))return 'Aceh';
+  if(s.includes('jambi'))return 'Jambi';
+  if(s.includes('bengkulu'))return 'Bengkulu';
+  if(s.includes('bangka')||s.includes('belitung'))return 'Bangka Belitung';
+  if(s.includes('bali')||s.includes('denpasar')||s.includes('badung'))return 'Bali';
+  if(s.includes('west nusa tenggara')||s.includes('nusa tenggara barat')||s.includes('ntb')||s.includes('mataram')||s.includes('lombok'))return 'Nusa Tenggara Barat';
+  if(s.includes('east nusa tenggara')||s.includes('nusa tenggara timur')||s.includes('ntt')||s.includes('kupang'))return 'Nusa Tenggara Timur';
+  if(s.includes('south sulawesi')||s.includes('sulawesi selatan')||s.includes('makassar')||s.includes('gowa'))return 'Sulawesi Selatan';
+  if(s.includes('north sulawesi')||s.includes('sulawesi utara')||s.includes('manado'))return 'Sulawesi Utara';
+  if(s.includes('central sulawesi')||s.includes('sulawesi tengah')||s.includes('palu'))return 'Sulawesi Tengah';
+  if(s.includes('southeast sulawesi')||s.includes('sulawesi tenggara')||s.includes('kendari'))return 'Sulawesi Tenggara';
+  if(s.includes('west sulawesi')||s.includes('sulawesi barat')||s.includes('mamuju'))return 'Sulawesi Barat';
+  if(s.includes('gorontalo'))return 'Gorontalo';
+  if(s.includes('west kalimantan')||s.includes('kalimantan barat')||s.includes('pontianak'))return 'Kalimantan Barat';
+  if(s.includes('south kalimantan')||s.includes('kalimantan selatan')||s.includes('banjarmasin'))return 'Kalimantan Selatan';
+  if(s.includes('east kalimantan')||s.includes('kalimantan timur')||s.includes('samarinda')||s.includes('balikpapan'))return 'Kalimantan Timur';
+  if(s.includes('central kalimantan')||s.includes('kalimantan tengah')||s.includes('palangka raya'))return 'Kalimantan Tengah';
+  if(s.includes('north kalimantan')||s.includes('kalimantan utara')||s.includes('tarakan'))return 'Kalimantan Utara';
+  if(s.includes('maluku utara')||s.includes('north maluku')||s.includes('ternate'))return 'Maluku Utara';
+  if(s.includes('maluku')||s.includes('ambon'))return 'Maluku';
+  if(s.includes('papua barat')||s.includes('west papua')||s.includes('sorong'))return 'Papua Barat';
+  if(s.includes('papua')||s.includes('jayapura'))return 'Papua';
+  return raw||'Wilayah Lainnya';
+}
+
+function fmtDateIndo(dStr){
+  if(!dStr)return '';
+  const parts=String(dStr).split('-');
+  if(parts.length!==3)return dStr;
+  const [y,m,d]=parts;
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${Number(d)} ${months[Number(m)-1]||m} ${y}`;
+}
+
+function getActiveDateRange(){
+  const now=new Date(Date.now()+7*3600000);
+  const todayStr=now.toISOString().slice(0,10);
+  const yesterdayDate=new Date(now.getTime()-86400000);
+  const yesterdayStr=yesterdayDate.toISOString().slice(0,10);
+
+  if(selectedPeriod==='today'){
+    return {type:'today',label:`Hari Ini (${fmtDateIndo(todayStr)})`,dates:[todayStr],isSingleDay:true,isFullMonth:false};
+  }
+  if(selectedPeriod==='yesterday'){
+    return {type:'yesterday',label:`Kemarin (${fmtDateIndo(yesterdayStr)})`,dates:[yesterdayStr],isSingleDay:true,isFullMonth:false};
+  }
+  if(selectedPeriod==='last_7_days'){
+    const dates=[];
+    for(let i=0;i<7;i++){
+      const dt=new Date(now.getTime()-i*86400000);
+      dates.push(dt.toISOString().slice(0,10));
+    }
+    const startStr=dates[dates.length-1];
+    return {type:'last_7_days',label:`7 Hari Terakhir (${fmtDateIndo(startStr)} – ${fmtDateIndo(todayStr)})`,dates,isSingleDay:false,isFullMonth:false};
+  }
+  if(selectedPeriod==='last_30_days'){
+    const dates=[];
+    for(let i=0;i<30;i++){
+      const dt=new Date(now.getTime()-i*86400000);
+      dates.push(dt.toISOString().slice(0,10));
+    }
+    const startStr=dates[dates.length-1];
+    return {type:'last_30_days',label:`30 Hari Terakhir (${fmtDateIndo(startStr)} – ${fmtDateIndo(todayStr)})`,dates,isSingleDay:false,isFullMonth:false};
+  }
+  if(selectedPeriod==='custom'){
+    let s=customStartDate||todayStr;
+    let e=customEndDate||todayStr;
+    if(s>e)[s,e]=[e,s];
+    const dates=[];
+    let cur=new Date(s+'T00:00:00Z');
+    const endDt=new Date(e+'T00:00:00Z');
+    while(cur<=endDt){
+      dates.push(cur.toISOString().slice(0,10));
+      cur=new Date(cur.getTime()+86400000);
+      if(dates.length>120)break;
+    }
+    dates.reverse();
+    return {type:'custom',label:`Rentang: ${fmtDateIndo(s)} – ${fmtDateIndo(e)}`,dates,isSingleDay:s===e,isFullMonth:false};
+  }
+  if(selectedPeriod==='last_month'){
+    return {type:'last_month',label:analyticsData?.availableMonths?.[1]?.label||'Bulan Lalu',dates:null,isSingleDay:false,isFullMonth:true,monthKey:analyticsData?.prevMonth};
+  }
+  return {type:'this_month',label:analyticsData?.availableMonths?.[0]?.label||'Bulan Ini',dates:null,isSingleDay:false,isFullMonth:true,monthKey:analyticsData?.currentMonth};
+}
+
+function computePeriodSlice(pData,dateRange){
+  if(!pData)return null;
+  if(dateRange.isFullMonth)return pData;
+
+  const dates=dateRange.dates||[];
+  const targetDates=new Set(dates);
+  const dailyMap=pData.daily||{};
+  const visitorsMap=pData.visitors||{};
+
+  let totalViews=0,totalWaClicks=0,totalPreviews=0;
+  const uniqueVisitorSet=new Set();
+  const provMap=new Map();
+  const cityMap=new Map();
+  const devMap=new Map();
+  const srcMap=new Map();
+
+  for(const date of dates){
+    const d=dailyMap[date];
+    if(!d)continue;
+    totalViews+=Number(d.views)||0;
+    totalWaClicks+=Number(d.waClicks)||0;
+    totalPreviews+=Number(d.previews)||0;
+    const vids=Object.keys(d.visitors||{});
+    for(const vid of vids){
+      uniqueVisitorSet.add(vid);
+      const vInfo=visitorsMap[vid]||{};
+      const reg=vInfo.region||'Wilayah Lainnya';
+      const prov=extractProvince(reg);
+      const dev=vInfo.device||'📱 HP / Perangkat';
+      const src=vInfo.source||'🌐 Browser Langsung';
+
+      if(!provMap.has(prov)){
+        provMap.set(prov,{province:prov,uniqueVisitors:0,totalViews:0,uniqueWaClickers:0,totalWaClicks:0,cities:new Map()});
+      }
+      const p=provMap.get(prov);
+      p.uniqueVisitors+=1;
+      p.totalViews+=1;
+      if(!p.cities.has(reg)){
+        p.cities.set(reg,{name:reg,uniqueVisitors:0,totalViews:0,waClicks:0});
+      }
+      const c=p.cities.get(reg);
+      c.uniqueVisitors+=1;
+      c.totalViews+=1;
+
+      if(!cityMap.has(reg)){
+        cityMap.set(reg,{region:reg,uniqueVisitors:0,totalViews:0,uniqueWaClickers:0,totalWaClicks:0});
+      }
+      const cm=cityMap.get(reg);
+      cm.uniqueVisitors+=1;
+      cm.totalViews+=1;
+
+      if(!devMap.has(dev)){
+        devMap.set(dev,{device:dev,osType:dev.includes('iPhone')||dev.includes('iPad')?'iOS':(dev.includes('Android')||dev.includes('Samsung')||dev.includes('Xiaomi')||dev.includes('OPPO')||dev.includes('Vivo')?'Android':'Lainnya'),uniqueVisitors:0,totalViews:0,uniqueWaClickers:0,totalWaClicks:0});
+      }
+      devMap.get(dev).uniqueVisitors+=1;
+      devMap.get(dev).totalViews+=1;
+
+      if(!srcMap.has(src)){
+        srcMap.set(src,{source:src,uniqueVisitors:0,totalViews:0,uniqueWaClickers:0,totalWaClicks:0});
+      }
+      srcMap.get(src).uniqueVisitors+=1;
+      srcMap.get(src).totalViews+=1;
+    }
+  }
+
+  const filteredRecents=(pData.recentClicks||[]).filter(c=>{
+    const cDate=c.date||(c.timestamp?new Date(c.timestamp+7*3600000).toISOString().slice(0,10):'');
+    return targetDates.has(cDate);
+  });
+
+  for(const c of filteredRecents){
+    if(c.region){
+      const prov=extractProvince(c.region);
+      if(provMap.has(prov)){
+        provMap.get(prov).totalWaClicks+=1;
+        provMap.get(prov).uniqueWaClickers+=1;
+      }
+      if(cityMap.has(c.region)){
+        cityMap.get(c.region).totalWaClicks+=1;
+        cityMap.get(c.region).uniqueWaClickers+=1;
+      }
+    }
+    if(c.device&&devMap.has(c.device)){
+      devMap.get(c.device).totalWaClicks+=1;
+      devMap.get(c.device).uniqueWaClickers+=1;
+    }
+    if(c.source&&srcMap.has(c.source)){
+      srcMap.get(c.source).totalWaClicks+=1;
+      srcMap.get(c.source).uniqueWaClickers+=1;
+    }
+  }
+
+  const uniqueVisitors=uniqueVisitorSet.size;
+  const uniqueWaClickers=filteredRecents.length>0?new Set(filteredRecents.map(c=>c.timestamp)).size:0;
+  const numDays=Math.max(1,dates.length);
+  const avgDaily=Math.round(uniqueVisitors/numDays);
+  const convRate=uniqueVisitors>0?Number(((totalWaClicks/uniqueVisitors)*100).toFixed(1)):0;
+
+  const provinces=[...provMap.values()].map(p=>({
+    province:p.province,
+    uniqueVisitors:p.uniqueVisitors,
+    totalViews:p.totalViews,
+    uniqueWaClickers:p.uniqueWaClickers,
+    totalWaClicks:p.totalWaClicks,
+    conversionRate:p.uniqueVisitors>0?Number(((p.totalWaClicks/p.uniqueVisitors)*100).toFixed(1)):0,
+    cities:[...p.cities.values()]
+  })).sort((a,b)=>(b.uniqueVisitors-a.uniqueVisitors)||(b.totalWaClicks-a.totalWaClicks));
+
+  const regions=[...cityMap.values()].map(c=>({
+    region:c.region,
+    uniqueVisitors:c.uniqueVisitors,
+    totalViews:c.totalViews,
+    uniqueWaClickers:c.uniqueWaClickers,
+    totalWaClicks:c.totalWaClicks,
+    conversionRate:c.uniqueVisitors>0?Number(((c.totalWaClicks/c.uniqueVisitors)*100).toFixed(1)):0
+  })).sort((a,b)=>(b.uniqueVisitors-a.uniqueVisitors)||(b.totalWaClicks-a.totalWaClicks));
+
+  const devices=[...devMap.values()].map(d=>({
+    device:d.device,
+    osType:d.osType,
+    uniqueVisitors:d.uniqueVisitors,
+    totalViews:d.totalViews,
+    uniqueWaClickers:d.uniqueWaClickers,
+    totalWaClicks:d.totalWaClicks,
+    conversionRate:d.uniqueVisitors>0?Number(((d.totalWaClicks/d.uniqueVisitors)*100).toFixed(1)):0
+  })).sort((a,b)=>(b.uniqueVisitors-a.uniqueVisitors)||(b.totalWaClicks-a.totalWaClicks));
+
+  const sources=[...srcMap.values()].map(s=>({
+    source:s.source,
+    uniqueVisitors:s.uniqueVisitors,
+    totalViews:s.totalViews,
+    uniqueWaClickers:s.uniqueWaClickers,
+    totalWaClicks:s.totalWaClicks,
+    conversionRate:s.uniqueVisitors>0?Number(((s.totalWaClicks/s.uniqueVisitors)*100).toFixed(1)):0
+  })).sort((a,b)=>(b.uniqueVisitors-a.uniqueVisitors)||(b.totalWaClicks-a.totalWaClicks));
+
+  return {
+    ...pData,
+    daysInPeriod:numDays,
+    avgDailyVisitors:avgDaily,
+    uniqueMonthly:uniqueVisitors,
+    uniqueToday:dateRange.isSingleDay?uniqueVisitors:pData.uniqueToday,
+    totalPageviews:totalViews,
+    viewsToday:dateRange.isSingleDay?totalViews:pData.viewsToday,
+    totalPreviews,
+    totalWaClicks,
+    uniqueWaClickers,
+    conversionRate:convRate,
+    provinces,
+    regions,
+    devices,
+    sources,
+    recentClicks:filteredRecents
+  };
+}
+
 function renderAnalytics(){
   if(!analyticsData){
     const compBody=$('#analytics-pages-rows');
@@ -668,27 +937,53 @@ function renderAnalytics(){
     return;
   }
 
+  const dateRange=getActiveDateRange();
   const monthData=getActiveMonthData();
   if(!monthData||!monthData.pages)return;
-  const pages=monthData.pages;
-  const current=pages[activeAnalyticsPage]||pages.all;
+  const rawPages=monthData.pages;
+  const rawCurrent=rawPages[activeAnalyticsPage]||rawPages.all;
+  const current=computePeriodSlice(rawCurrent,dateRange)||rawCurrent;
   const isCurrent=!!monthData.isCurrent;
 
-  // Month Pills
+  // Period / Date Range Pills (Gambar 1)
   const monthPills=$('#analytics-month-pills');
-  if(monthPills&&analyticsData.availableMonths){
+  if(monthPills){
     monthPills.replaceChildren();
-    for(const m of analyticsData.availableMonths){
+    const PERIOD_DEFS=[
+      {key:'this_month',label:'Bulan Ini'},
+      {key:'last_month',label:'Bulan Lalu'},
+      {key:'today',label:'Hari Ini'},
+      {key:'yesterday',label:'Kemarin'},
+      {key:'last_7_days',label:'7 Hari Terakhir'},
+      {key:'last_30_days',label:'30 Hari Terakhir'},
+      {key:'custom',label:'📅 Pilih Tanggal (Rentang)'}
+    ];
+    for(const pDef of PERIOD_DEFS){
       const btn=document.createElement('button');
       btn.type='button';
-      btn.className='month-pill-btn'+(m.key===selectedMonthKey?' active':'');
+      btn.className='month-pill-btn'+(pDef.key===selectedPeriod?' active':'');
       const dot=document.createElement('span');
       dot.className='month-dot';
       const lbl=document.createElement('span');
-      lbl.textContent=m.label;
+      lbl.textContent=pDef.label;
       btn.append(dot,lbl);
       btn.onclick=()=>{
-        selectedMonthKey=m.key;
+        selectedPeriod=pDef.key;
+        if(pDef.key==='last_month'&&analyticsData.prevMonth){
+          selectedMonthKey=analyticsData.prevMonth;
+        }else if(analyticsData.currentMonth){
+          selectedMonthKey=analyticsData.currentMonth;
+        }
+        const customWrap=$('#analytics-custom-range');
+        if(customWrap){
+          customWrap.hidden=(pDef.key!=='custom');
+          if(pDef.key==='custom'){
+            const nowStr=new Date(Date.now()+7*3600000).toISOString().slice(0,10);
+            const sevenDaysAgo=new Date(Date.now()+7*3600000-6*86400000).toISOString().slice(0,10);
+            if(!$('#range-start-date').value)$('#range-start-date').value=customStartDate||sevenDaysAgo;
+            if(!$('#range-end-date').value)$('#range-end-date').value=customEndDate||nowStr;
+          }
+        }
         renderAnalytics();
         render();
       };
@@ -696,18 +991,33 @@ function renderAnalytics(){
     }
   }
 
-  setText('#analytics-month-title',monthData.label);
-  setText('#analytics-active-month-label',monthData.label);
-  setText('#analytics-comp-month-badge',monthData.label);
+  // Custom Range Apply Button
+  const applyRangeBtn=$('#apply-custom-range');
+  if(applyRangeBtn){
+    applyRangeBtn.onclick=()=>{
+      customStartDate=$('#range-start-date')?.value||'';
+      customEndDate=$('#range-end-date')?.value||'';
+      if(!customStartDate||!customEndDate){
+        notice('Pilih tanggal awal dan akhir terlebih dahulu.');
+        return;
+      }
+      renderAnalytics();
+      render();
+    };
+  }
+
+  setText('#analytics-month-title',dateRange.label);
+  setText('#analytics-active-month-label',dateRange.label);
+  setText('#analytics-comp-month-badge',dateRange.label);
   setText('#analytics-active-page-label',current.label);
   setText('#analytics-updated-at','Diperbarui: '+fmtTime(analyticsData.updatedAt));
-  setText('#analytics-daily-sub',`Rincian tanggal 1 s/d ${current.daysInPeriod||30} pada ${monthData.label}`);
+  setText('#analytics-daily-sub',`Rincian tanggal 1 s/d ${current.daysInPeriod||30} pada ${dateRange.label}`);
 
   document.querySelectorAll('.analytics-tab').forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.page===activeAnalyticsPage);
   });
 
-  // 1. 3-Page Comparison Table
+  // 1. Comparison Table (Recalculated for Selected Period)
   const compBody=$('#analytics-pages-rows');
   if(compBody){
     compBody.replaceChildren();
@@ -715,11 +1025,13 @@ function renderAnalytics(){
       {key:'home',icon:'🏠',title:'Halaman Utama (/)',sub:'Landing page utama dengan harga'},
       {key:'web',icon:'💌',title:'Web Invitation (/web-invitation)',sub:'Landing page khusus tanpa harga'},
       {key:'tema',icon:'🎨',title:'Katalog Tema (/tema)',sub:'Halaman katalog pilihan produk'},
+      {key:'tutorial',icon:'📖',title:'Tutorial (/tutorial)',sub:'Panduan penggunaan undangan website'},
       {key:'all',icon:'🌐',title:'Semua Halaman (Gabungan)',sub:'Total gabungan seluruh website'}
     ];
     for(const item of order){
-      const pData=pages[item.key];
-      if(!pData)continue;
+      const rawP=rawPages[item.key];
+      if(!rawP)continue;
+      const pData=computePeriodSlice(rawP,dateRange)||rawP;
       const tr=document.createElement('tr');
       if(activeAnalyticsPage===item.key)tr.className='active-row';
       tr.onclick=()=>{activeAnalyticsPage=item.key;renderAnalytics();};
@@ -743,7 +1055,7 @@ function renderAnalytics(){
       tdAvg.textContent=`${fmtNum(pData.avgDailyVisitors)} / hari`;
 
       const tdToday=document.createElement('td');
-      tdToday.textContent=isCurrent?`${fmtNum(pData.uniqueToday)} orang`:'—';
+      tdToday.textContent=`${fmtNum(pData.uniqueToday)} orang`;
 
       const tdViews=document.createElement('td');
       tdViews.textContent=`${fmtNum(pData.totalPageviews)}x`;
@@ -772,55 +1084,185 @@ function renderAnalytics(){
   }
 
   // 2. KPI Cards
+  const kpiPeriodLabel=dateRange.isSingleDay?'Pengunjung Unik Hari Ini':(dateRange.isFullMonth?(isCurrent?'Pengunjung Unik Bulan Ini':'Pengunjung Unik Bulan Lalu'):`Pengunjung Unik (${dateRange.type==='last_7_days'?'7 Hari Terakhir':'Periode Ini'})`);
   setText('#kpi-unique-monthly',fmtNum(current.uniqueMonthly));
-  setText('#kpi-unique-monthly-label',isCurrent?'Pengunjung Unik Bulan Ini':'Pengunjung Unik Bulan Lalu');
-  setText('#kpi-unique-monthly-note',isCurrent?'Jika user refresh atau buka lagi di bulan ini, tetap dihitung 1 orang.':'Total pengunjung unik terdeduplikasi pada bulan lalu.');
+  setText('#kpi-unique-monthly-label',kpiPeriodLabel);
+  setText('#kpi-unique-monthly-note',`Deduplikasi pengunjung unik anti-refresh pada ${dateRange.label}.`);
 
-  setText('#kpi-unique-today',isCurrent?fmtNum(current.uniqueToday):fmtNum(current.avgDailyVisitors));
-  setText('#kpi-unique-today-label',isCurrent?'Pengunjung Unik Hari Ini':'Rata-rata Pengunjung / Hari');
-  setText('#kpi-unique-avg',isCurrent?(`Rata-rata: ${fmtNum(current.avgDailyVisitors)} orang unik / hari`):(`Periode: ${current.daysInPeriod} hari penuh`));
+  setText('#kpi-unique-today',dateRange.isSingleDay?fmtNum(current.uniqueToday):fmtNum(current.avgDailyVisitors));
+  setText('#kpi-unique-today-label',dateRange.isSingleDay?'Pengunjung Unik Hari Terpilih':'Rata-rata Pengunjung / Hari');
+  setText('#kpi-unique-avg',dateRange.isSingleDay?(`Aktivitas: ${fmtNum(current.totalPageviews)}x dibuka`):(`Rata-rata: ${fmtNum(current.avgDailyVisitors)} orang unik / hari (${current.daysInPeriod} hari)`));
 
   setText('#kpi-total-views',fmtNum(current.totalPageviews));
-  setText('#kpi-views-today',`🔍 ${fmtNum(current.totalPreviews||0)}x lihat contoh (${fmtNum(current.uniquePreviewers||0)} org) · Hari ini: ${fmtNum(current.viewsToday)}x buka`);
+  setText('#kpi-views-today',`🔍 ${fmtNum(current.totalPreviews||0)}x lihat contoh · Total ${fmtNum(current.totalPageviews)}x halaman dibuka`);
 
   setText('#kpi-wa-clicks',fmtNum(current.totalWaClicks));
   setText('#kpi-wa-conversion',`${fmtNum(current.uniqueWaClickers)} orang unik klik WA · Konversi ${current.conversionRate}%`);
 
-  // 3. Regions / Wilayah Table
+  // 3. Sebaran Wilayah / Provinsi Table (Gambar 2: Konsep Provinsi & Filter Harian)
+  const regHeading=$('#analytics-prov-heading');
+  const regSub=$('#analytics-prov-sub');
+  const thProvCol=$('#th-prov-col');
+  if(regHeading)regHeading.textContent=provViewMode==='prov'?'📍 Sebaran Provinsi Pengunjung':'📍 Sebaran Wilayah / Kota Pengunjung';
+  if(regSub)regSub.textContent=provViewMode==='prov'?'Dikelompokkan otomatis per provinsi Indonesia & zona waktu':'Deteksi otomatis dari jaringan IP & zona waktu tanpa meminta GPS';
+  if(thProvCol)thProvCol.textContent=provViewMode==='prov'?'Provinsi (Zona Waktu)':'Wilayah / Kota (Zona Waktu)';
+
+  const btnViewProv=$('#toggle-view-prov');
+  const btnViewCity=$('#toggle-view-city');
+  if(btnViewProv&&btnViewCity){
+    btnViewProv.classList.toggle('active',provViewMode==='prov');
+    btnViewCity.classList.toggle('active',provViewMode==='city');
+    btnViewProv.onclick=()=>{provViewMode='prov';renderAnalytics();};
+    btnViewCity.onclick=()=>{provViewMode='city';renderAnalytics();};
+  }
+
+  // Setup card-level daily filter pills & select dropdown
+  const provPillsWrap=$('#prov-filter-pills');
+  if(provPillsWrap){
+    provPillsWrap.querySelectorAll('.prov-pill-btn').forEach(btn=>{
+      btn.classList.toggle('active',btn.dataset.provDate===selectedProvDate);
+      btn.onclick=()=>{
+        selectedProvDate=btn.dataset.provDate;
+        const sel=$('#prov-date-select');
+        if(sel)sel.value=(['today','yesterday','7days','all'].includes(selectedProvDate)?selectedProvDate:'all');
+        renderAnalytics();
+      };
+    });
+  }
+
+  const provSelect=$('#prov-date-select');
+  if(provSelect){
+    const availDays=(rawCurrent.dailyTrend||[]).map(d=>d.date).filter(Boolean);
+    provSelect.replaceChildren();
+    const optAll=document.createElement('option');
+    optAll.value='all';
+    optAll.textContent='-- Semua Sesuai Periode --';
+    provSelect.append(optAll);
+    for(const dk of availDays){
+      const opt=document.createElement('option');
+      opt.value=dk;
+      opt.textContent=fmtDateIndo(dk);
+      if(selectedProvDate===dk)opt.selected=true;
+      provSelect.append(opt);
+    }
+    provSelect.onchange=()=>{
+      selectedProvDate=provSelect.value;
+      if(provPillsWrap){
+        provPillsWrap.querySelectorAll('.prov-pill-btn').forEach(b=>{
+          b.classList.toggle('active',b.dataset.provDate===selectedProvDate);
+        });
+      }
+      renderAnalytics();
+    };
+  }
+
+  // Calculate province / city slice based on selectedProvDate
+  let activeProvData=current;
+  if(selectedProvDate!=='all'){
+    let subDates=[];
+    const now=new Date(Date.now()+7*3600000);
+    const todayStr=now.toISOString().slice(0,10);
+    const yesterdayDate=new Date(now.getTime()-86400000);
+    const yesterdayStr=yesterdayDate.toISOString().slice(0,10);
+
+    if(selectedProvDate==='today'){
+      subDates=[todayStr];
+    }else if(selectedProvDate==='yesterday'){
+      subDates=[yesterdayStr];
+    }else if(selectedProvDate==='7days'){
+      for(let i=0;i<7;i++){
+        const dt=new Date(now.getTime()-i*86400000);
+        subDates.push(dt.toISOString().slice(0,10));
+      }
+    }else{
+      subDates=[selectedProvDate];
+    }
+    const subRange={dates:subDates,isSingleDay:subDates.length===1,isFullMonth:false};
+    activeProvData=computePeriodSlice(rawCurrent,subRange)||current;
+  }
+
   const regBody=$('#analytics-region-rows');
   if(regBody){
-    const regs=current.regions||[];
-    if(!regs.length){
-      emptyRow(regBody,5,'Belum ada data wilayah pengunjung pada periode ini.');
+    regBody.replaceChildren();
+    if(provViewMode==='prov'){
+      const provs=activeProvData.provinces||[];
+      if(!provs.length){
+        emptyRow(regBody,5,'Belum ada data provinsi pengunjung pada tanggal/periode ini.');
+      }else{
+        for(const p of provs){
+          const tr=document.createElement('tr');
+          const tdProv=document.createElement('td');
+          const wrap=document.createElement('div');
+          wrap.className='prov-name-wrap';
+          const title=document.createElement('strong');
+          title.className='prov-name-title';
+          title.textContent=`📍 ${p.province}`;
+          wrap.append(title);
+
+          if(p.cities&&p.cities.length){
+            const citiesEl=document.createElement('div');
+            citiesEl.className='prov-cities-list';
+            const cityNames=p.cities.map(c=>`${c.name.replace(/\s*\([^)]*\)/,'').trim()} (${c.uniqueVisitors||1})`);
+            citiesEl.textContent='Kota: '+cityNames.join(', ');
+            wrap.append(citiesEl);
+          }
+          tdProv.append(wrap);
+
+          const tdUniq=document.createElement('td');
+          const pU=document.createElement('span');
+          pU.className='pill-num';
+          pU.textContent=`${fmtNum(p.uniqueVisitors)} orang`;
+          tdUniq.append(pU);
+
+          const tdViews=document.createElement('td');
+          tdViews.textContent=`${fmtNum(p.totalViews)}x`;
+
+          const tdWa=document.createElement('td');
+          const pW=document.createElement('span');
+          pW.className='pill-num wa';
+          pW.textContent=`${fmtNum(p.totalWaClicks)} klik (${fmtNum(p.uniqueWaClickers)} org)`;
+          tdWa.append(pW);
+
+          const tdConv=document.createElement('td');
+          tdConv.textContent=`${p.conversionRate}%`;
+
+          tr.append(tdProv,tdUniq,tdViews,tdWa,tdConv);
+          regBody.append(tr);
+        }
+      }
     }else{
-      regBody.replaceChildren();
-      for(const r of regs){
-        const tr=document.createElement('tr');
-        const tdReg=document.createElement('td');
-        const st=document.createElement('strong');
-        st.textContent=`📍 ${r.region}`;
-        tdReg.append(st);
+      const regs=activeProvData.regions||[];
+      if(!regs.length){
+        emptyRow(regBody,5,'Belum ada data wilayah kota pengunjung pada tanggal/periode ini.');
+      }else{
+        for(const r of regs){
+          const tr=document.createElement('tr');
+          const tdReg=document.createElement('td');
+          const st=document.createElement('strong');
+          st.textContent=`📍 ${r.region}`;
+          tdReg.append(st);
 
-        const tdUniq=document.createElement('td');
-        const pU=document.createElement('span');
-        pU.className='pill-num';
-        pU.textContent=`${fmtNum(r.uniqueVisitors)} orang`;
-        tdUniq.append(pU);
+          const tdUniq=document.createElement('td');
+          const pU=document.createElement('span');
+          pU.className='pill-num';
+          pU.textContent=`${fmtNum(r.uniqueVisitors)} orang`;
+          tdUniq.append(pU);
 
-        const tdViews=document.createElement('td');
-        tdViews.textContent=`${fmtNum(r.totalViews)}x`;
+          const tdViews=document.createElement('td');
+          tdViews.textContent=`${fmtNum(r.totalViews)}x`;
 
-        const tdWa=document.createElement('td');
-        const pW=document.createElement('span');
-        pW.className='pill-num wa';
-        pW.textContent=`${fmtNum(r.totalWaClicks)} klik (${fmtNum(r.uniqueWaClickers)} org)`;
-        tdWa.append(pW);
+          const tdWa=document.createElement('td');
+          const pW=document.createElement('span');
+          pW.className='pill-num wa';
+          pW.textContent=`${fmtNum(r.totalWaClicks)} klik (${fmtNum(r.uniqueWaClickers)} org)`;
+          tdWa.append(pW);
 
-        const tdConv=document.createElement('td');
-        tdConv.textContent=`${r.conversionRate}%`;
+          const tdConv=document.createElement('td');
+          tdConv.textContent=`${r.conversionRate}%`;
 
-        tr.append(tdReg,tdUniq,tdViews,tdWa,tdConv);
-        regBody.append(tr);
+          tr.append(tdReg,tdUniq,tdViews,tdWa,tdConv);
+          regBody.append(tr);
+        }
       }
     }
   }

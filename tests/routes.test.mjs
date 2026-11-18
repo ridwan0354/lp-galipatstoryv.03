@@ -35,6 +35,7 @@ test('routes /tema and /web-invitation serve respective landing pages', async ()
     await fs.copyFile(new URL('../preview.mjs', import.meta.url), path.join(dir, 'preview.mjs'));
     await fs.copyFile(new URL('../public/tema.html', import.meta.url), path.join(dir, 'public/tema.html'));
     await fs.copyFile(new URL('../public/web-invitation.html', import.meta.url), path.join(dir, 'public/web-invitation.html'));
+    await fs.copyFile(new URL('../public/tutorial.html', import.meta.url), path.join(dir, 'public/tutorial.html'));
     await fs.copyFile(new URL('../public/index.html', import.meta.url), path.join(dir, 'public/index.html'));
     await fs.copyFile(new URL('../public/admin.html', import.meta.url), path.join(dir, 'public/admin.html'));
 
@@ -95,6 +96,23 @@ test('routes /tema and /web-invitation serve respective landing pages', async ()
 
     const rWeb2 = await fetch(`${base}/web-invitation/`);
     assert.equal(rWeb2.status, 200);
+
+    // Check /tutorial and /tutorial/
+    const rTut1 = await fetch(`${base}/tutorial`);
+    assert.equal(rTut1.status, 200);
+    const htmlTut1 = await rTut1.text();
+    assert.ok(htmlTut1.includes('Tutorial') && htmlTut1.includes('Galipat Story'));
+    assert.ok(htmlTut1.includes('Tutorial QR Barcode'));
+    assert.ok(htmlTut1.includes('Tutorial Ganti Nama Tamu'));
+    assert.ok(htmlTut1.includes('Tutorial Edit Sendiri'));
+    assert.ok(htmlTut1.includes('Tutorial Ganti Template Pesan'));
+    assert.ok(htmlTut1.includes('4fcxFyoIECI'));
+    assert.ok(htmlTut1.includes('4pm8Py8uSlU'));
+    assert.ok(htmlTut1.includes('dP8clak9SkE'));
+    assert.ok(htmlTut1.includes('0Bdmiu_mYkk'));
+
+    const rTut2 = await fetch(`${base}/tutorial/`);
+    assert.equal(rTut2.status, 200);
 
     // Test /api/font-proxy CORS and security
     const rFontEmpty = await fetch(`${base}/api/font-proxy`);

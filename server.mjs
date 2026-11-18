@@ -75,6 +75,12 @@ const defaultPageThumbnails = {
     title: 'Undangan Digital Web Pernikahan Online — Galipat Story',
     description: 'Jasa pembuatan undangan digital web pernikahan online terima beres. Dibuatkan tim dalam 8-24 jam, bebas revisi sampai hari H, aktif 1 tahun pasca acara.',
     image: '/assets/images/hero_mockup_v3.webp'
+  },
+  tutorial: {
+    name: 'Tutorial ( /tutorial )',
+    title: 'Tutorial Undangan Website — Galipat Story',
+    description: 'Panduan dan video tutorial resmi Galipat Story: scan QR barcode buku tamu, ganti nama tamu undangan, edit data mandiri, dan ganti template pesan WhatsApp.',
+    image: '/assets/images/hero_mockup_v3.webp'
   }
 };
 function escapeAttr(str){
@@ -95,14 +101,15 @@ try{
     pageThumbnails: {
       home: { ...defaultPageThumbnails.home, ...(loaded.pageThumbnails?.home || {}) },
       tema: { ...defaultPageThumbnails.tema, ...(loaded.pageThumbnails?.tema || {}) },
-      webInvitation: { ...defaultPageThumbnails.webInvitation, ...(loaded.pageThumbnails?.webInvitation || {}) }
+      webInvitation: { ...defaultPageThumbnails.webInvitation, ...(loaded.pageThumbnails?.webInvitation || {}) },
+      tutorial: { ...defaultPageThumbnails.tutorial, ...(loaded.pageThumbnails?.tutorial || {}) }
     }
   };
 }catch(e){if(e.code!=='ENOENT')throw e;await fs.writeFile(settingsDb,JSON.stringify(settings,null,2)).catch(()=>{});}
 function mutateSettings(fn){const job=queue.then(async()=>{const next=fn(settings);await fs.writeFile(settingsDb+'.tmp',JSON.stringify(next,null,2));await fs.rename(settingsDb+'.tmp',settingsDb);settings=next;});queue=job.catch(()=>{});return job;}
 const analyticsDb=path.join(root,'data/analytics.json');
 const INDO_MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const PAGE_LABELS={all:'Semua Halaman (Gabungan)',home:'Halaman Utama (/)',web:'Web Invitation (/web-invitation)',tema:'Katalog Tema (/tema)'};
+const PAGE_LABELS={all:'Semua Halaman (Gabungan)',home:'Halaman Utama (/)',web:'Web Invitation (/web-invitation)',tema:'Katalog Tema (/tema)',tutorial:'Tutorial (/tutorial)'};
 const LOCATION_LABELS={'theme-card':'Kartu Tema di Katalog ("Pilih tema ini")',preview:'Pop-up Preview Tema ("Pilih tema ini via WA")',nav:'Tombol Navigasi Atas ("Tanya admin")',hero:'Tombol Hero Atas ("Konsultasi dulu")','mobile-bar':'Bar Melayang Bawah HP ("Konsultasi WhatsApp")','catalog-help':'Banner Bantuan Katalog ("Bantu pilih tema")',faq:'Bagian Tanya Jawab / FAQ ("Tanyakan ke admin")',closing:'Bagian Penutup Bawah ("Cerita dulu ke admin")','addon-priority':'Add-on: Proses Prioritas (+50K)','addon-video':'Add-on: Web to Video (+30K)','addon-link':'Add-on: Link Custom URL (+50K)','addon-theme':'Add-on: Ganti Tema (+30K)','addon-lang':'Add-on: Ganti Bahasa (+20K)','addon-guestbook':'Add-on: Barcode Buku Tamu (499K)',other:'Tombol WhatsApp Lainnya'};
 const HOUR_SLOTS=[{key:'pagi',label:'🌅 Pagi Hari',hours:'06:00 – 10:59 WIB'},{key:'siang',label:'☀️ Siang Hari',hours:'11:00 – 14:59 WIB'},{key:'sore',label:'🌤️ Sore Hari',hours:'15:00 – 17:59 WIB'},{key:'malam',label:'🌙 Malam (Prime Time)',hours:'18:00 – 21:59 WIB'},{key:'larut',label:'🌌 Larut Malam / Dini Hari',hours:'22:00 – 05:59 WIB'}];
 function jktDate(ts=Date.now()){return new Date(ts+7*3600000).toISOString().slice(0,10);}
@@ -188,14 +195,56 @@ async function lookupPublicIpGeo(ip,cache={}){
   }catch{}
   return null;
 }
+function extractProvince(raw=''){
+  const s=String(raw||'').toLowerCase().trim();
+  if(!s)return 'Tidak Diketahui';
+  if(s.startsWith('wilayah wita')||s.includes('wilayah wita'))return 'Wilayah WITA (Bali, NTB, NTT, Kalimantan, Sulawesi)';
+  if(s.startsWith('wilayah wit')||s.includes('wilayah wit'))return 'Wilayah WIT (Maluku, Papua)';
+  if(s.startsWith('wilayah wib')||s.includes('wilayah wib'))return 'Wilayah WIB (Jawa, Sumatera, Kalbar)';
+  if(s.includes('jakarta'))return 'DKI Jakarta';
+  if(s.includes('west java')||s.includes('jawa barat')||s.includes('bandung')||s.includes('bekasi')||s.includes('depok')||s.includes('bogor')||s.includes('cimahi')||s.includes('cirebon')||s.includes('karawang')||s.includes('tasikmalaya')||s.includes('sukabumi'))return 'Jawa Barat';
+  if(s.includes('east java')||s.includes('jawa timur')||s.includes('surabaya')||s.includes('malang')||s.includes('sidoarjo')||s.includes('jember')||s.includes('kediri')||s.includes('banyuwangi')||s.includes('pasuruan')||s.includes('probolinggo')||s.includes('gresik'))return 'Jawa Timur';
+  if(s.includes('central java')||s.includes('jawa tengah')||s.includes('semarang')||s.includes('surakarta')||s.includes('solo')||s.includes('magelang')||s.includes('pekalongan')||s.includes('tegal')||s.includes('kudus')||s.includes('cilacap')||s.includes('banyumas')||s.includes('purwokerto')||s.includes('salatiga'))return 'Jawa Tengah';
+  if(s.includes('banten')||s.includes('tangerang')||s.includes('serang')||s.includes('cilegon'))return 'Banten';
+  if(s.includes('yogyakarta')||s.includes('jogja')||s.includes('sleman')||s.includes('bantul'))return 'DI Yogyakarta';
+  if(s.includes('north sumatra')||s.includes('sumatera utara')||s.includes('medan')||s.includes('deli serdang')||s.includes('binjai')||s.includes('pematangsiantar'))return 'Sumatera Utara';
+  if(s.includes('west sumatra')||s.includes('sumatera barat')||s.includes('padang')||s.includes('bukittinggi'))return 'Sumatera Barat';
+  if(s.includes('south sumatra')||s.includes('sumatera selatan')||s.includes('palembang')||s.includes('prabumulih'))return 'Sumatera Selatan';
+  if(s.includes('riau islands')||s.includes('kepulauan riau')||s.includes('batam')||s.includes('tanjungpinang'))return 'Kepulauan Riau';
+  if(s.includes('riau')||s.includes('pekanbaru')||s.includes('dumai'))return 'Riau';
+  if(s.includes('lampung')||s.includes('bandar lampung'))return 'Lampung';
+  if(s.includes('aceh')||s.includes('banda aceh'))return 'Aceh';
+  if(s.includes('jambi'))return 'Jambi';
+  if(s.includes('bengkulu'))return 'Bengkulu';
+  if(s.includes('bangka')||s.includes('belitung'))return 'Bangka Belitung';
+  if(s.includes('bali')||s.includes('denpasar')||s.includes('badung'))return 'Bali';
+  if(s.includes('west nusa tenggara')||s.includes('nusa tenggara barat')||s.includes('ntb')||s.includes('mataram')||s.includes('lombok'))return 'Nusa Tenggara Barat';
+  if(s.includes('east nusa tenggara')||s.includes('nusa tenggara timur')||s.includes('ntt')||s.includes('kupang'))return 'Nusa Tenggara Timur';
+  if(s.includes('south sulawesi')||s.includes('sulawesi selatan')||s.includes('makassar')||s.includes('gowa'))return 'Sulawesi Selatan';
+  if(s.includes('north sulawesi')||s.includes('sulawesi utara')||s.includes('manado'))return 'Sulawesi Utara';
+  if(s.includes('central sulawesi')||s.includes('sulawesi tengah')||s.includes('palu'))return 'Sulawesi Tengah';
+  if(s.includes('southeast sulawesi')||s.includes('sulawesi tenggara')||s.includes('kendari'))return 'Sulawesi Tenggara';
+  if(s.includes('west sulawesi')||s.includes('sulawesi barat')||s.includes('mamuju'))return 'Sulawesi Barat';
+  if(s.includes('gorontalo'))return 'Gorontalo';
+  if(s.includes('west kalimantan')||s.includes('kalimantan barat')||s.includes('pontianak'))return 'Kalimantan Barat';
+  if(s.includes('south kalimantan')||s.includes('kalimantan selatan')||s.includes('banjarmasin'))return 'Kalimantan Selatan';
+  if(s.includes('east kalimantan')||s.includes('kalimantan timur')||s.includes('samarinda')||s.includes('balikpapan'))return 'Kalimantan Timur';
+  if(s.includes('central kalimantan')||s.includes('kalimantan tengah')||s.includes('palangka raya'))return 'Kalimantan Tengah';
+  if(s.includes('north kalimantan')||s.includes('kalimantan utara')||s.includes('tarakan'))return 'Kalimantan Utara';
+  if(s.includes('maluku utara')||s.includes('north maluku')||s.includes('ternate'))return 'Maluku Utara';
+  if(s.includes('maluku')||s.includes('ambon'))return 'Maluku';
+  if(s.includes('papua barat')||s.includes('west papua')||s.includes('sorong'))return 'Papua Barat';
+  if(s.includes('papua')||s.includes('jayapura'))return 'Papua';
+  return raw||'Wilayah Lainnya';
+}
 function emptyBucket(){return{uniqueMonthlyTotal:0,totalPageviews:0,totalWaClicks:0,uniqueWaClickersTotal:0,totalPreviews:0,uniquePreviewersTotal:0,visitors:{},waClickVisitors:{},previewVisitors:{},byLocation:{},byTheme:{},byRegion:{},byDevice:{},bySource:{},byCategoryInterest:{},byHourSlot:{},daily:{}};}
-function createEmptyMonthState(){return{all:emptyBucket(),home:emptyBucket(),web:emptyBucket(),tema:emptyBucket()};}
+function createEmptyMonthState(){return{all:emptyBucket(),home:emptyBucket(),web:emptyBucket(),tema:emptyBucket(),tutorial:emptyBucket()};}
 function createEmptyAnalyticsState(now=Date.now()){const curr=jktMonth(now),prev=getPrevMonthKey(curr);return{version:3,updatedAt:now,months:{[curr]:createEmptyMonthState(),[prev]:createEmptyMonthState()},ipGeoCache:{},recentClicks:[]};}
 function purgeOldMonths(state,now=Date.now()){const curr=jktMonth(now),prev=getPrevMonthKey(curr);if(state.months){for(const k of Object.keys(state.months)){if(k!==curr&&k!==prev)delete state.months[k];}}if(Array.isArray(state.recentClicks)){state.recentClicks=state.recentClicks.filter(c=>{const m=c.month||(c.timestamp?jktMonth(c.timestamp):'');return m===curr||m===prev;}).slice(0,100);}}
 function ensureMonth(state,mKey){state.months=state.months&&typeof state.months==='object'?state.months:{};if(!state.months[mKey])state.months[mKey]=createEmptyMonthState();return state.months[mKey];}
 function ensureBucket(b){if(!b||typeof b!=='object')return emptyBucket();return{uniqueMonthlyTotal:Number(b.uniqueMonthlyTotal)||0,totalPageviews:Number(b.totalPageviews)||0,totalWaClicks:Number(b.totalWaClicks)||0,uniqueWaClickersTotal:Number(b.uniqueWaClickersTotal)||0,totalPreviews:Number(b.totalPreviews)||0,uniquePreviewersTotal:Number(b.uniquePreviewersTotal)||0,visitors:b.visitors&&typeof b.visitors==='object'?b.visitors:{},waClickVisitors:b.waClickVisitors&&typeof b.waClickVisitors==='object'?b.waClickVisitors:{},previewVisitors:b.previewVisitors&&typeof b.previewVisitors==='object'?b.previewVisitors:{},byLocation:b.byLocation&&typeof b.byLocation==='object'?b.byLocation:{},byTheme:b.byTheme&&typeof b.byTheme==='object'?b.byTheme:{},byRegion:b.byRegion&&typeof b.byRegion==='object'?b.byRegion:{},byDevice:b.byDevice&&typeof b.byDevice==='object'?b.byDevice:{},bySource:b.bySource&&typeof b.bySource==='object'?b.bySource:{},byCategoryInterest:b.byCategoryInterest&&typeof b.byCategoryInterest==='object'?b.byCategoryInterest:{},byHourSlot:b.byHourSlot&&typeof b.byHourSlot==='object'?b.byHourSlot:{},daily:b.daily&&typeof b.daily==='object'?b.daily:{}};}
-function ensureAnalytics(raw){const now=Date.now(),base=createEmptyAnalyticsState(now);if(!raw||typeof raw!=='object')return base;base.updatedAt=Number(raw.updatedAt)||now;base.ipGeoCache=raw.ipGeoCache&&typeof raw.ipGeoCache==='object'?raw.ipGeoCache:{};base.months=base.months&&typeof base.months==='object'?base.months:{};const curr=jktMonth(base.updatedAt);if(raw.pages&&!raw.months){base.months[curr]={all:ensureBucket(raw.pages.all),home:ensureBucket(raw.pages.home),web:ensureBucket(raw.pages.web),tema:ensureBucket(raw.pages.tema)};}else if(raw.months&&typeof raw.months==='object'){for(const [mKey,mVal] of Object.entries(raw.months)){if(mVal&&typeof mVal==='object'){base.months[mKey]={all:ensureBucket(mVal.all),home:ensureBucket(mVal.home),web:ensureBucket(mVal.web),tema:ensureBucket(mVal.tema)};}}}base.recentClicks=Array.isArray(raw.recentClicks)?raw.recentClicks.slice(0,100):[];purgeOldMonths(base,now);return base;}
-function normPage(p){const s=String(p||'').trim().toLowerCase();if(s==='web'||s.includes('web-invitation'))return 'web';if(s==='tema'||s==='/tema'||s==='/tema/')return 'tema';return 'home';}
+function ensureAnalytics(raw){const now=Date.now(),base=createEmptyAnalyticsState(now);if(!raw||typeof raw!=='object')return base;base.updatedAt=Number(raw.updatedAt)||now;base.ipGeoCache=raw.ipGeoCache&&typeof raw.ipGeoCache==='object'?raw.ipGeoCache:{};base.months=base.months&&typeof base.months==='object'?base.months:{};const curr=jktMonth(base.updatedAt);if(raw.pages&&!raw.months){base.months[curr]={all:ensureBucket(raw.pages.all),home:ensureBucket(raw.pages.home),web:ensureBucket(raw.pages.web),tema:ensureBucket(raw.pages.tema),tutorial:ensureBucket(raw.pages.tutorial)};}else if(raw.months&&typeof raw.months==='object'){for(const [mKey,mVal] of Object.entries(raw.months)){if(mVal&&typeof mVal==='object'){base.months[mKey]={all:ensureBucket(mVal.all),home:ensureBucket(mVal.home),web:ensureBucket(mVal.web),tema:ensureBucket(mVal.tema),tutorial:ensureBucket(mVal.tutorial)};}}}base.recentClicks=Array.isArray(raw.recentClicks)?raw.recentClicks.slice(0,100):[];purgeOldMonths(base,now);return base;}
+function normPage(p){const s=String(p||'').trim().toLowerCase();if(s==='web'||s.includes('web-invitation'))return 'web';if(s==='tema'||s==='/tema'||s==='/tema/')return 'tema';if(s==='tutorial'||s==='/tutorial'||s==='/tutorial/')return 'tutorial';return 'home';}
 function resolveVisitorId(vid,ip='',ua='',salt='gs'){const c=String(vid||'').trim();if(/^[a-zA-Z0-9_-]{8,64}$/.test(c))return 'v_'+c;return 'fp_'+createHash('sha256').update(`${ip}|${ua}|${salt}`).digest('hex').slice(0,24);}
 function recordMetaVisit(b,vid,now,{regionLabel,deviceInfo,sourceLabel,hourSlot}){
   if(regionLabel){b.byRegion=b.byRegion||{};if(!b.byRegion[regionLabel])b.byRegion[regionLabel]={region:regionLabel,uniqueVisitors:0,totalViews:0,uniqueWaClickers:0,totalWaClicks:0,visitors:{},waVisitors:{},lastSeenAt:0};const r=b.byRegion[regionLabel];r.totalViews+=1;r.lastSeenAt=now;r.visitors=r.visitors||{};if(!r.visitors[vid]){r.visitors[vid]=now;r.uniqueVisitors+=1;}}
@@ -240,6 +289,22 @@ function sumBucket(b,pk,recents,monthKey,isCurrent,now=Date.now()){
     return{name:x.name,category:x.category||'Tema Undangan',totalClicks:tClicks,uniqueClickers:uClickers,fromCard:x.fromCard||0,fromPreview:x.fromPreview||0,fromOther:x.fromOther||0,previewCount:pCount,uniquePreviewers:uPrev,previewWithPhoto:pPhoto,previewNoPhoto:pNoPhoto,previewToWaRate,insight,lastClickedAt:x.lastClickedAt||x.lastPreviewedAt||0};
   }).sort((a,c)=>(c.totalClicks-a.totalClicks)||(c.previewCount-a.previewCount));
   const regions=Object.values(b.byRegion||{}).map(x=>{const uVis=Number(x.uniqueVisitors)||0,uWa=Number(x.uniqueWaClickers)||0;return{region:x.region,uniqueVisitors:uVis,totalViews:Number(x.totalViews)||0,uniqueWaClickers:uWa,totalWaClicks:Number(x.totalWaClicks)||0,conversionRate:uVis>0?Number(((uWa/uVis)*100).toFixed(1)):0,lastSeenAt:x.lastSeenAt||0};}).sort((a,c)=>(c.uniqueVisitors-a.uniqueVisitors)||(c.totalWaClicks-a.totalWaClicks));
+  const provinceMap=new Map();
+  for(const r of regions){
+    const provName=extractProvince(r.region);
+    const tzZone=resolveTimezoneZone(r.region).zone||'WIB';
+    if(!provinceMap.has(provName)){
+      provinceMap.set(provName,{province:provName,zone:tzZone,uniqueVisitors:0,totalViews:0,uniqueWaClickers:0,totalWaClicks:0,cities:[],lastSeenAt:0});
+    }
+    const p=provinceMap.get(provName);
+    p.uniqueVisitors+=r.uniqueVisitors;
+    p.totalViews+=r.totalViews;
+    p.uniqueWaClickers+=r.uniqueWaClickers;
+    p.totalWaClicks+=r.totalWaClicks;
+    p.lastSeenAt=Math.max(p.lastSeenAt,r.lastSeenAt||0);
+    p.cities.push({name:r.region,uniqueVisitors:r.uniqueVisitors,totalViews:r.totalViews,waClicks:r.totalWaClicks});
+  }
+  const provinces=[...provinceMap.values()].map(p=>({...p,conversionRate:p.uniqueVisitors>0?Number(((p.uniqueWaClickers/p.uniqueVisitors)*100).toFixed(1)):0})).sort((a,b)=>(b.uniqueVisitors-a.uniqueVisitors)||(b.totalWaClicks-a.totalWaClicks));
   const devices=Object.values(b.byDevice||{}).map(x=>{const uVis=Number(x.uniqueVisitors)||0,uWa=Number(x.uniqueWaClickers)||0;return{device:x.device,osType:x.osType||'Lainnya',uniqueVisitors:uVis,totalViews:Number(x.totalViews)||0,uniqueWaClickers:uWa,totalWaClicks:Number(x.totalWaClicks)||0,conversionRate:uVis>0?Number(((uWa/uVis)*100).toFixed(1)):0,lastSeenAt:x.lastSeenAt||0};}).sort((a,c)=>(c.uniqueVisitors-a.uniqueVisitors)||(c.totalWaClicks-a.totalWaClicks));
   const sources=Object.values(b.bySource||{}).map(x=>{const uVis=Number(x.uniqueVisitors)||0,uWa=Number(x.uniqueWaClickers)||0;return{source:x.source,uniqueVisitors:uVis,totalViews:Number(x.totalViews)||0,uniqueWaClickers:uWa,totalWaClicks:Number(x.totalWaClicks)||0,conversionRate:uVis>0?Number(((uWa/uVis)*100).toFixed(1)):0,lastSeenAt:x.lastSeenAt||0};}).sort((a,c)=>(c.uniqueVisitors-a.uniqueVisitors)||(c.totalWaClicks-a.totalWaClicks));
   const categoryInterests=Object.values(b.byCategoryInterest||{}).map(x=>({category:x.category,uniqueUsers:Number(x.uniqueUsers)||0,totalClicks:Number(x.totalClicks)||0,lastClickedAt:x.lastClickedAt||0})).sort((a,c)=>c.totalClicks-a.totalClicks);
@@ -250,7 +315,7 @@ function sumBucket(b,pk,recents,monthKey,isCurrent,now=Date.now()){
   const avgDailyVisitors=currentDayNum>0?Math.round(uniqueMonthly/currentDayNum):0;
   const monthRecents=recents.filter(c=>(c.month||jktMonth(c.timestamp))===monthKey);
   const filteredRecents=pk==='all'?monthRecents:monthRecents.filter(c=>c.page===pk);
-  return{page:pk,label:PAGE_LABELS[pk]||pk,monthKey,isCurrent,daysInPeriod:currentDayNum,avgDailyVisitors,uniqueMonthly,uniqueToday,totalPageviews:b.totalPageviews||0,viewsToday,totalPreviews,uniquePreviewers,totalWaClicks:b.totalWaClicks||0,uniqueWaClickers,waClicksToday,conversionRate,locations,themes:themesList,regions,devices,sources,categoryInterests,hourSlots,dailyTrend,recentClicks:filteredRecents.slice(0,50)};
+  return{page:pk,label:PAGE_LABELS[pk]||pk,monthKey,isCurrent,daysInPeriod:currentDayNum,avgDailyVisitors,uniqueMonthly,uniqueToday,totalPageviews:b.totalPageviews||0,viewsToday,totalPreviews,uniquePreviewers,totalWaClicks:b.totalWaClicks||0,uniqueWaClickers,waClicksToday,conversionRate,locations,themes:themesList,regions,provinces,devices,sources,categoryInterests,hourSlots,dailyTrend,daily:b.daily||{},visitors:b.visitors||{},recentClicks:filteredRecents.slice(0,50)};
 }
 function buildAnalyticsSummary(state,now=Date.now()){purgeOldMonths(state,now);const currMonth=jktMonth(now),prevMonth=getPrevMonthKey(currMonth);ensureMonth(state,currMonth);ensureMonth(state,prevMonth);const monthsSummary={};for(const mKey of [currMonth,prevMonth]){const mData=state.months[mKey];const isCurr=(mKey===currMonth);monthsSummary[mKey]={monthKey:mKey,label:formatMonthLabel(mKey,isCurr),isCurrent:isCurr,pages:{all:sumBucket(mData.all,'all',state.recentClicks,mKey,isCurr,now),home:sumBucket(mData.home,'home',state.recentClicks,mKey,isCurr,now),web:sumBucket(mData.web,'web',state.recentClicks,mKey,isCurr,now),tema:sumBucket(mData.tema,'tema',state.recentClicks,mKey,isCurr,now)}};}return{updatedAt:state.updatedAt||now,currentMonth:currMonth,prevMonth:prevMonth,availableMonths:[{key:currMonth,label:formatMonthLabel(currMonth,true),isCurrent:true},{key:prevMonth,label:formatMonthLabel(prevMonth,false),isCurrent:false}],months:monthsSummary,pages:monthsSummary[currMonth].pages};}
 let analytics=createEmptyAnalyticsState();
@@ -394,11 +459,12 @@ if(p==='/'||p==='')targetPath='/index.html';
 else if(p==='/kamu'||p==='/kamu/')targetPath='/admin.html';
 else if(p==='/tema'||p==='/tema/')targetPath='/tema.html';
 else if(p==='/web-invitation'||p==='/web-invitation/')targetPath='/web-invitation.html';
+else if(p==='/tutorial'||p==='/tutorial/')targetPath='/tutorial.html';
 if(p==='/admin'||p==='/admin/'||p==='/admin.html'){res.writeHead(302,{'Location':'/kamu','Content-Length':'0','Cache-Control':'no-cache'});return res.end();}
 const file=path.resolve(publicDir,'.'+decodeURIComponent(targetPath));if(!file.startsWith(publicDir+path.sep))return send(res,403,{error:'Akses ditolak.'});try{let bytes=await fs.readFile(file);const ext=path.extname(file);let cacheHeader='no-cache';if(file.includes('admin')||p.includes('admin')||p.includes('kamu')){cacheHeader='no-cache, no-store, must-revalidate';}else if(p.startsWith('/assets/')||p.startsWith('/vendor/')||p.startsWith('/favicon')||['.webp','.png','.jpg','.jpeg','.svg','.ico','.woff2'].includes(ext)){cacheHeader='public, max-age=31536000, immutable';}else if(p.startsWith('/uploads/')){cacheHeader='public, max-age=2592000';}else if(ext==='.css'||ext==='.js'){cacheHeader='public, max-age=31536000, immutable';}
-if(ext==='.html'&&['/index.html','/tema.html','/web-invitation.html'].includes(targetPath)){
+if(ext==='.html'&&['/index.html','/tema.html','/web-invitation.html','/tutorial.html'].includes(targetPath)){
   let html=bytes.toString('utf8');
-  const pageKey=targetPath==='/index.html'?'home':(targetPath==='/tema.html'?'tema':'webInvitation');
+  const pageKey=targetPath==='/index.html'?'home':(targetPath==='/tema.html'?'tema':(targetPath==='/web-invitation.html'?'webInvitation':'tutorial'));
   const thumb=settings.pageThumbnails?.[pageKey]||defaultPageThumbnails[pageKey];
   if(thumb){
     const host=req.headers['x-forwarded-host']||req.headers.host||'lp.galipatstory.com';

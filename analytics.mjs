@@ -235,6 +235,49 @@ export function formatRegionLabel({ city = '', region = '', tz = '' } = {}) {
   return tzInfo.defaultRegion;
 }
 
+export function extractProvince(raw = '') {
+  const s = String(raw || '').toLowerCase().trim();
+  if (!s) return 'Tidak Diketahui';
+  if (s.startsWith('wilayah wita') || s.includes('wilayah wita')) return 'Wilayah WITA (Bali, NTB, NTT, Kalimantan, Sulawesi)';
+  if (s.startsWith('wilayah wit') || s.includes('wilayah wit')) return 'Wilayah WIT (Maluku, Papua)';
+  if (s.startsWith('wilayah wib') || s.includes('wilayah wib')) return 'Wilayah WIB (Jawa, Sumatera, Kalbar)';
+  if (s.includes('jakarta')) return 'DKI Jakarta';
+  if (s.includes('west java') || s.includes('jawa barat') || s.includes('bandung') || s.includes('bekasi') || s.includes('depok') || s.includes('bogor') || s.includes('cimahi') || s.includes('cirebon') || s.includes('karawang') || s.includes('tasikmalaya') || s.includes('sukabumi') || s.includes('garut') || s.includes('purwakarta') || s.includes('subang') || s.includes('sumedang') || s.includes('indramayu') || s.includes('majalengka') || s.includes('kuningan') || s.includes('ciamis') || s.includes('banjar') || s.includes('pangandaran')) return 'Jawa Barat';
+  if (s.includes('east java') || s.includes('jawa timur') || s.includes('surabaya') || s.includes('malang') || s.includes('sidoarjo') || s.includes('jember') || s.includes('kediri') || s.includes('banyuwangi') || s.includes('madiun') || s.includes('pasuruan') || s.includes('probolinggo') || s.includes('gresik') || s.includes('blitar') || s.includes('bojonegoro') || s.includes('tuban') || s.includes('lamongan') || s.includes('ngawi') || s.includes('magetan') || s.includes('ponorogo') || s.includes('pacitan') || s.includes('trenggalek') || s.includes('tulungagung') || s.includes('lumajang') || s.includes('situbondo') || s.includes('bondowoso') || s.includes('mojokerto') || s.includes('batu')) return 'Jawa Timur';
+  if (s.includes('central java') || s.includes('jawa tengah') || s.includes('semarang') || s.includes('surakarta') || s.includes('solo') || s.includes('magelang') || s.includes('pekalongan') || s.includes('tegal') || s.includes('kudus') || s.includes('cilacap') || s.includes('banyumas') || s.includes('purwokerto') || s.includes('salatiga') || s.includes('kebumen') || s.includes('brebes') || s.includes('pati') || s.includes('jepara') || s.includes('klaten') || s.includes('sukoharjo') || s.includes('wonogiri') || s.includes('karanganyar') || s.includes('sragen') || s.includes('boyolali') || s.includes('purworejo') || s.includes('wonosobo') || s.includes('temanggung') || s.includes('kendal') || s.includes('batang') || s.includes('pemalang') || s.includes('demak') || s.includes('grobogan') || s.includes('blora') || s.includes('rembang')) return 'Jawa Tengah';
+  if (s.includes('banten') || s.includes('tangerang') || s.includes('serang') || s.includes('cilegon') || s.includes('lebak') || s.includes('pandeglang')) return 'Banten';
+  if (s.includes('yogyakarta') || s.includes('jogja') || s.includes('sleman') || s.includes('bantul') || s.includes('gunungkidul') || s.includes('kulon progo')) return 'DI Yogyakarta';
+  if (s.includes('north sumatra') || s.includes('sumatera utara') || s.includes('medan') || s.includes('deli serdang') || s.includes('binjai') || s.includes('pematangsiantar') || s.includes('asahan') || s.includes('simalungun') || s.includes('labuhanbatu') || s.includes('karo') || s.includes('tapanuli') || s.includes('tebing tinggi') || s.includes('padangsidimpuan')) return 'Sumatera Utara';
+  if (s.includes('west sumatra') || s.includes('sumatera barat') || s.includes('padang') || s.includes('bukittinggi') || s.includes('payakumbuh') || s.includes('pariaman') || s.includes('solok') || s.includes('sawahlunto')) return 'Sumatera Barat';
+  if (s.includes('south sumatra') || s.includes('sumatera selatan') || s.includes('palembang') || s.includes('prabumulih') || s.includes('lubuklinggau') || s.includes('banyuasin') || s.includes('oki') || s.includes('oku') || s.includes('muara enim') || s.includes('lahat')) return 'Sumatera Selatan';
+  if (s.includes('riau islands') || s.includes('kepulauan riau') || s.includes('batam') || s.includes('tanjungpinang') || s.includes('bintan') || s.includes('karimun')) return 'Kepulauan Riau';
+  if (s.includes('riau') || s.includes('pekanbaru') || s.includes('dumai') || s.includes('kampar') || s.includes('bengkalis') || s.includes('siak') || s.includes('indragiri') || s.includes('pelalawan') || s.includes('rokan')) return 'Riau';
+  if (s.includes('lampung') || s.includes('bandar lampung') || s.includes('metro')) return 'Lampung';
+  if (s.includes('aceh') || s.includes('banda aceh') || s.includes('lhokseumawe') || s.includes('sabang') || s.includes('langsa')) return 'Aceh';
+  if (s.includes('jambi') || s.includes('sungai penuh')) return 'Jambi';
+  if (s.includes('bengkulu')) return 'Bengkulu';
+  if (s.includes('bangka') || s.includes('belitung') || s.includes('pangkalpinang')) return 'Bangka Belitung';
+  if (s.includes('bali') || s.includes('denpasar') || s.includes('badung') || s.includes('gianyar') || s.includes('buleleng') || s.includes('tabanan') || s.includes('klungkung') || s.includes('karangasem') || s.includes('bangli') || s.includes('jembrana')) return 'Bali';
+  if (s.includes('west nusa tenggara') || s.includes('nusa tenggara barat') || s.includes('ntb') || s.includes('mataram') || s.includes('lombok') || s.includes('sumbawa') || s.includes('bima') || s.includes('dompu')) return 'Nusa Tenggara Barat';
+  if (s.includes('east nusa tenggara') || s.includes('nusa tenggara timur') || s.includes('ntt') || s.includes('kupang') || s.includes('flores') || s.includes('sumba') || s.includes('alor') || s.includes('ende') || s.includes('manggarai')) return 'Nusa Tenggara Timur';
+  if (s.includes('south sulawesi') || s.includes('sulawesi selatan') || s.includes('makassar') || s.includes('gowa') || s.includes('maros') || s.includes('parepare') || s.includes('palopo') || s.includes('bone') || s.includes('bulukumba') || s.includes('bantaeng') || s.includes('sinjai') || s.includes('soppeng') || s.includes('wajo') || s.includes('sidenreng') || s.includes('pinrang') || s.includes('enrekang') || s.includes('luwu') || s.includes('toraja')) return 'Sulawesi Selatan';
+  if (s.includes('north sulawesi') || s.includes('sulawesi utara') || s.includes('manado') || s.includes('bitung') || s.includes('tomohon') || s.includes('kotamobagu') || s.includes('minahasa') || s.includes('bolmong')) return 'Sulawesi Utara';
+  if (s.includes('central sulawesi') || s.includes('sulawesi tengah') || s.includes('palu') || s.includes('poso') || s.includes('banggai') || s.includes('donggala') || s.includes('parigi')) return 'Sulawesi Tengah';
+  if (s.includes('southeast sulawesi') || s.includes('sulawesi tenggara') || s.includes('kendari') || s.includes('baubau') || s.includes('kolaka') || s.includes('konawe') || s.includes('muna') || s.includes('buton')) return 'Sulawesi Tenggara';
+  if (s.includes('west sulawesi') || s.includes('sulawesi barat') || s.includes('mamuju') || s.includes('majene') || s.includes('polewali')) return 'Sulawesi Barat';
+  if (s.includes('gorontalo')) return 'Gorontalo';
+  if (s.includes('west kalimantan') || s.includes('kalimantan barat') || s.includes('pontianak') || s.includes('singkawang') || s.includes('kubu raya') || s.includes('sambas') || s.includes('ketapang') || s.includes('sintang')) return 'Kalimantan Barat';
+  if (s.includes('south kalimantan') || s.includes('kalimantan selatan') || s.includes('banjarmasin') || s.includes('banjarbaru') || s.includes('martapura') || s.includes('banjar') || s.includes('tanah laut') || s.includes('tanah bumbu') || s.includes('kotabaru') || s.includes('tabalong')) return 'Kalimantan Selatan';
+  if (s.includes('east kalimantan') || s.includes('kalimantan timur') || s.includes('samarinda') || s.includes('balikpapan') || s.includes('bontang') || s.includes('kutai') || s.includes('berau') || s.includes('penajam') || s.includes('ikn')) return 'Kalimantan Timur';
+  if (s.includes('central kalimantan') || s.includes('kalimantan tengah') || s.includes('palangka raya') || s.includes('kotawaringin') || s.includes('kapuas') || s.includes('barito')) return 'Kalimantan Tengah';
+  if (s.includes('north kalimantan') || s.includes('kalimantan utara') || s.includes('tarakan') || s.includes('bulungan') || s.includes('nunukan') || s.includes('malinau')) return 'Kalimantan Utara';
+  if (s.includes('maluku utara') || s.includes('north maluku') || s.includes('ternate') || s.includes('tidore') || s.includes('halmahera')) return 'Maluku Utara';
+  if (s.includes('maluku') || s.includes('ambon') || s.includes('seram') || s.includes('buru') || s.includes('tual')) return 'Maluku';
+  if (s.includes('papua barat') || s.includes('west papua') || s.includes('sorong') || s.includes('manokwari') || s.includes('fakfak') || s.includes('raja ampat')) return 'Papua Barat';
+  if (s.includes('papua') || s.includes('jayapura') || s.includes('merauke') || s.includes('mimika') || s.includes('timika') || s.includes('nabire') || s.includes('biak') || s.includes('wamena')) return 'Papua';
+  return raw || 'Wilayah Lainnya';
+}
+
 export function emptyBucket() {
   return {
     uniqueMonthlyTotal: 0,
@@ -856,6 +899,40 @@ export function sumBucket(b, pk, recents, monthKey, isCurrent, now = Date.now())
     };
   }).sort((a, c) => (c.uniqueVisitors - a.uniqueVisitors) || (c.totalWaClicks - a.totalWaClicks));
 
+  const provinceMap = new Map();
+  for (const r of regions) {
+    const provName = extractProvince(r.region);
+    const tzZone = resolveTimezoneZone(r.region).zone || 'WIB';
+    if (!provinceMap.has(provName)) {
+      provinceMap.set(provName, {
+        province: provName,
+        zone: tzZone,
+        uniqueVisitors: 0,
+        totalViews: 0,
+        uniqueWaClickers: 0,
+        totalWaClicks: 0,
+        cities: [],
+        lastSeenAt: 0
+      });
+    }
+    const p = provinceMap.get(provName);
+    p.uniqueVisitors += r.uniqueVisitors;
+    p.totalViews += r.totalViews;
+    p.uniqueWaClickers += r.uniqueWaClickers;
+    p.totalWaClicks += r.totalWaClicks;
+    p.lastSeenAt = Math.max(p.lastSeenAt, r.lastSeenAt || 0);
+    p.cities.push({
+      name: r.region,
+      uniqueVisitors: r.uniqueVisitors,
+      totalViews: r.totalViews,
+      waClicks: r.totalWaClicks
+    });
+  }
+  const provinces = [...provinceMap.values()].map(p => ({
+    ...p,
+    conversionRate: p.uniqueVisitors > 0 ? Number(((p.uniqueWaClickers / p.uniqueVisitors) * 100).toFixed(1)) : 0
+  })).sort((a, b) => (b.uniqueVisitors - a.uniqueVisitors) || (b.totalWaClicks - a.totalWaClicks));
+
   const devices = Object.values(b.byDevice || {}).map(x => {
     const uVis = Number(x.uniqueVisitors) || 0;
     const uWa = Number(x.uniqueWaClickers) || 0;
@@ -947,11 +1024,14 @@ export function sumBucket(b, pk, recents, monthKey, isCurrent, now = Date.now())
     locations,
     themes: themesList,
     regions,
+    provinces,
     devices,
     sources,
     categoryInterests,
     hourSlots,
     dailyTrend,
+    daily: b.daily || {},
+    visitors: b.visitors || {},
     recentClicks: filteredRecents.slice(0, 50)
   };
 }
