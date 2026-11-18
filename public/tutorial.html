@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://i.ytimg.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap">
   <link rel="preload" as="image" href="/assets/images/brand-logo.webp" type="image/webp" fetchpriority="high">
-  <link rel="stylesheet" href="/style.css?v=3.4.2">
+  <link rel="stylesheet" href="/style.css?v=3.4.3">
 
   <style>
     /* =========================================================
@@ -71,42 +71,56 @@
       line-height: 1.55;
     }
 
-    /* Filter Pills */
+    /* Filter Pills (Persis Subfilters Halaman Tema: Kecil & Rapi) */
     .tut-filter-nav {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 8px;
-      margin: 20px auto 32px;
+      margin: 16px auto 28px;
+      padding: 0;
     }
 
     .tut-filter-btn {
       appearance: none;
       -webkit-appearance: none;
       background: #ffffff;
-      color: #475569;
-      border: 1.5px solid #cbd5e1;
-      padding: 8px 18px;
-      border-radius: 999px;
-      font-size: 13.5px;
+      color: #435c4f;
+      border: 1px solid #cad5c5;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11.5px;
       font-weight: 600;
+      min-height: 32px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+      transition: all 0.18s ease;
       font-family: inherit;
       outline: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .tut-filter-btn:hover {
-      border-color: #364349;
-      color: #364349;
-      background: #f8fafc;
+      background: #fafcf9;
+      border-color: var(--tut-green);
+      color: var(--ink);
+      transform: translateY(-1px);
     }
 
-    .tut-filter-btn.active {
-      background: #364349;
-      color: #ffffff;
-      border-color: #364349;
-      box-shadow: 0 4px 12px rgba(54,67,73,0.2);
+    .tut-filter-btn.active,
+    .tut-filter-btn[aria-pressed="true"] {
+      background: var(--tut-green) !important;
+      border-color: var(--tut-green) !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 8px rgba(35, 72, 62, 0.22);
+      transform: none;
+    }
+
+    .tut-filter-btn.active:hover,
+    .tut-filter-btn[aria-pressed="true"]:hover {
+      color: #ffffff !important;
     }
 
     /* Box Card Container (Sesuai Gambar Referensi Elementor) */
@@ -376,9 +390,15 @@
         gap: 16px;
         margin-bottom: 8px;
       }
+      .tut-filter-nav {
+        gap: 6px;
+        margin: 12px auto 20px;
+      }
       .tut-filter-btn {
-        padding: 6px 14px;
-        font-size: 12.5px;
+        padding: 5px 11px;
+        font-size: 10.5px;
+        min-height: 28px;
+        border-radius: 18px;
       }
       .tut-box-foot {
         font-size: 12px;
@@ -439,13 +459,13 @@
       <h1 class="tut-main-title">Tutorial Galipat Story</h1>
       <p class="tut-main-desc">Panduan video lengkap dan langkah mudah mengelola fitur undangan website kalian.</p>
 
-      <!-- Filter Buttons -->
+      <!-- Filter Buttons (Model Sub-tema: Kecil & Rapih) -->
       <nav class="tut-filter-nav" aria-label="Kategori Tutorial">
-        <button type="button" class="tut-filter-btn active" data-filter="all">Semua Tutorial</button>
-        <button type="button" class="tut-filter-btn" data-filter="qr">QR Barcode</button>
-        <button type="button" class="tut-filter-btn" data-filter="ganti-nama">Ganti Nama Tamu</button>
-        <button type="button" class="tut-filter-btn" data-filter="edit-sendiri">Edit Sendiri</button>
-        <button type="button" class="tut-filter-btn" data-filter="template-pesan">Template Pesan</button>
+        <button type="button" class="tut-filter-btn active" data-filter="all" aria-pressed="true">Semua Tutorial</button>
+        <button type="button" class="tut-filter-btn" data-filter="qr" aria-pressed="false">QR Barcode</button>
+        <button type="button" class="tut-filter-btn" data-filter="ganti-nama" aria-pressed="false">Ganti Nama Tamu</button>
+        <button type="button" class="tut-filter-btn" data-filter="edit-sendiri" aria-pressed="false">Edit Sendiri</button>
+        <button type="button" class="tut-filter-btn" data-filter="template-pesan" aria-pressed="false">Template Pesan</button>
       </nav>
     </header>
 
@@ -715,8 +735,12 @@
     filterBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const cat = btn.getAttribute('data-filter');
-        filterBtns.forEach(b => b.classList.remove('active'));
+        filterBtns.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
         btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
 
         allBoxes.forEach(box => {
           const boxCat = box.getAttribute('data-category');
